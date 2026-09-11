@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-11T02:39:20Z",
+  "title": "Design System: The Minds",
+  "extensions": {
+    "shadows": [
+      { "name": "primary-action", "value": "0 4px 14px #08061155", "purpose": "Primary buttons." },
+      { "name": "table", "value": "0 20px 50px #0004", "purpose": "Oval game surface." },
+      { "name": "played-card", "value": "0 9px 18px #09061266", "purpose": "Center card." },
+      { "name": "private-card", "value": "0 5px 9px #0005", "purpose": "Private hand." }
+    ],
+    "motion": [
+      { "name": "button-feedback", "value": "background .16s ease-out", "purpose": "Primary and secondary hover." },
+      { "name": "hand-feedback", "value": "transform .14s ease-out", "purpose": "Lowest-card hover lift." },
+      { "name": "card-arrive", "value": "card-arrive .18s ease-out", "purpose": "Played-card arrival; disabled with reduced motion." }
+    ],
+    "breakpoints": [{ "name": "mobile", "value": "760px" }]
+  },
+  "components": [
+    {
+      "name": "Primary action", "kind": "button", "refersTo": "button-primary", "description": "Start, ready, or approve.",
+      "html": "<button class=\"ds-primary\">Aku siap</button>",
+      "css": ".ds-primary{display:inline-flex;align-items:center;justify-content:center;gap:12px;min-height:50px;padding:13px 24px;border-radius:12px;font:600 15px 'Segoe UI',system-ui,sans-serif;background:var(--gold,#e3c78e);color:var(--gold-dark,#392919);border:0;box-shadow:0 4px 14px #08061155;transition:background .16s ease-out;cursor:pointer}.ds-primary:hover:not(:disabled){background:#efdab0}.ds-primary:active:not(:disabled){filter:brightness(.9)}.ds-primary:focus-visible{outline:2px solid var(--mint,#a5d5c1);outline-offset:4px}.ds-primary:disabled{opacity:.48;cursor:default}@media(prefers-reduced-motion:reduce){.ds-primary{transition:none}}"
+    },
+    {
+      "name": "Secondary action", "kind": "button", "refersTo": "button-secondary", "description": "Invite, decline, or cancel.",
+      "html": "<button class=\"ds-secondary\">Undang teman</button>",
+      "css": ".ds-secondary{display:inline-flex;align-items:center;justify-content:center;gap:12px;min-height:50px;padding:13px 24px;border-radius:12px;font:600 15px 'Segoe UI',system-ui,sans-serif;background:#292337;border:1px solid #80708f;color:var(--text,#eee9f2);transition:background .16s ease-out;cursor:pointer}.ds-secondary:hover:not(:disabled){background:#3a2e48}.ds-secondary:active:not(:disabled){filter:brightness(.9)}.ds-secondary:focus-visible{outline:2px solid var(--mint,#a5d5c1);outline-offset:4px}.ds-secondary:disabled{opacity:.48;cursor:default}@media(prefers-reduced-motion:reduce){.ds-secondary{transition:none}}"
+    },
+    {
+      "name": "Text action", "kind": "button", "refersTo": "button-text", "description": "Quiet room and guide actions.",
+      "html": "<button class=\"ds-text\">Keluar room</button>",
+      "css": ".ds-text{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 0;min-height:44px;border:0;background:transparent;color:var(--muted,#b9b1c8);font:13px 'Segoe UI',system-ui,sans-serif;cursor:pointer}.ds-text:hover{color:var(--gold,#e3c78e)}.ds-text:focus-visible{outline:2px solid var(--mint,#a5d5c1);outline-offset:4px}.ds-text:disabled{opacity:.48;cursor:default}"
+    },
+    {
+      "name": "Icon action", "kind": "button", "refersTo": "button-icon", "description": "Sound toggle and dialog close control.",
+      "html": "<button class=\"ds-icon\" aria-label=\"Tutup panduan\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.3\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"m6 6 12 12M6 18 18 6\"/></svg></button>",
+      "css": ".ds-icon{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border:1px solid var(--line,#514664);border-radius:12px;background:#211c2c;color:var(--text,#eee9f2);cursor:pointer}.ds-icon svg{width:20px;height:20px}.ds-icon:hover{color:var(--gold,#e3c78e)}.ds-icon:focus-visible{outline:2px solid var(--mint,#a5d5c1);outline-offset:4px}"
+    },
+    {
+      "name": "Nickname field", "kind": "input", "refersTo": "input", "description": "Visible label and room-visible nickname hint.",
+      "html": "<label class=\"ds-field\">Nama panggilanmu<input autocomplete=\"nickname\" maxlength=\"24\" required placeholder=\"Misalnya, Naya\" aria-describedby=\"ds-name-hint\"><small id=\"ds-name-hint\">Nama ini terlihat oleh teman satu room.</small></label>",
+      "css": ".ds-field{display:flex;flex-direction:column;gap:9px;margin-bottom:20px;color:var(--text,#eee9f2);font:14px 'Segoe UI',system-ui,sans-serif}.ds-field input{min-width:0;width:100%;border:1px solid #776886;border-radius:10px;padding:13px 14px;min-height:50px;background:#15131f;color:var(--text,#eee9f2);font:16px 'Segoe UI',system-ui,sans-serif;caret-color:var(--gold,#e3c78e)}.ds-field input::placeholder{color:#afa3be}.ds-field input:focus{border-color:var(--gold,#e3c78e)}.ds-field input:focus-visible{outline:2px solid var(--mint,#a5d5c1);outline-offset:4px}.ds-field small{font-size:12px;color:var(--muted,#b9b1c8);line-height:1.5}"
+    },
+    {
+      "name": "Create or join navigation", "kind": "nav", "description": "Menu mode controls; application code owns selection changes.",
+      "html": "<div class=\"ds-tabs\" role=\"group\" aria-label=\"Menu permainan\"><button class=\"ds-selected\" aria-pressed=\"true\">Buat room</button><button aria-pressed=\"false\">Gabung room</button></div>",
+      "css": ".ds-tabs{display:flex;gap:4px;padding:4px;margin-bottom:24px;background:#15121e;border-radius:10px;border:1px solid #564662}.ds-tabs button{flex:1;min-height:44px;background:transparent;border:0;border-radius:7px;color:var(--muted,#b9b1c8);font:14px 'Segoe UI',system-ui,sans-serif;cursor:pointer}.ds-tabs .ds-selected{background:#49374d;color:#f4e3bf}.ds-tabs button:hover:not(.ds-selected){color:var(--text,#eee9f2);background:#282033}.ds-tabs button:focus-visible{outline:2px solid var(--mint,#a5d5c1);outline-offset:4px}"
+    },
+    {
+      "name": "Played card", "kind": "card", "refersTo": "table-card", "description": "Static center card; numeric state is announced separately in the app.",
+      "html": "<div class=\"ds-card\" aria-label=\"Kartu teratas: 34\"><span aria-hidden=\"true\">34</span><strong aria-hidden=\"true\">34</strong><span aria-hidden=\"true\">34</span></div>",
+      "css": ".ds-card{width:125px;height:169px;padding:12px;border-radius:12px;background:var(--card,#eee5d3);color:#392c3a;display:flex;flex-direction:column;justify-content:space-between;text-align:left;box-shadow:0 9px 18px #09061266;animation:ds-card-arrive .18s ease-out}.ds-card>strong{align-self:center;font:500 74px/.9 var(--display,'Grenze',Georgia,serif)}.ds-card>span{font:500 18px/1 var(--display,'Grenze',Georgia,serif)}.ds-card>span:last-child{align-self:flex-end;transform:rotate(180deg)}@keyframes ds-card-arrive{from{transform:translateY(-8px) rotate(-3deg)}to{transform:translateY(0) rotate(0)}}@media(prefers-reduced-motion:reduce){.ds-card{animation:none}}"
+    },
+    {
+      "name": "Shuriken vote status", "kind": "chip", "refersTo": "vote", "description": "Pending and approved player votes; status labels are not buttons.",
+      "html": "<div class=\"ds-votes\"><span>Naya</span><span class=\"ds-yes\">Raka<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.3\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"m5 12 4 4L19 6\"/></svg></span></div>",
+      "css": ".ds-votes{display:flex;gap:9px;justify-content:center;flex-wrap:wrap}.ds-votes>span{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border:1px solid #71617d;border-radius:8px;font:12px 'Segoe UI',system-ui,sans-serif;color:var(--muted,#b9b1c8);min-width:0;max-width:100%;overflow-wrap:anywhere}.ds-votes .ds-yes{color:var(--mint,#a5d5c1);border-color:#719b89}.ds-votes svg{width:16px;height:16px;flex-shrink:0}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The midnight tabletop",
+    "overview": "The implemented game uses a dark purple table, warm gold controls, pale numbered cards, and individual player tokens. The centered title menu introduces the same eye emblem and card shapes used in play. This name describes the built direction; it is not a new brand claim.\n\nThe interface keeps the current card, the private hand, and the next game action prominent. Copy explains game actions in Indonesian and English without generic slogans. Room administration sits in a native disclosure below the game.",
+    "keyCharacteristics": ["Purple tabletop with gold actions and pale cards.", "Grenze titles and card numbers with system sans-serif controls.", "Visible player identity and status; concealed opponents' hands.", "Short action feedback without timing assistance."],
+    "rules": [],
+    "dos": ["Do keep the private hand and next available action easy to find.", "Do use text or icons alongside connection, readiness, and vote colors.", "Do retain keyboard focus, native disclosures and dialogs, and reduced-motion handling.", "Do keep Indonesian and English copy specific to the game action."],
+    "donts": ["Don't expose another player's private card values.", "Don't introduce animation that supplies timing assistance.", "Don't replace game copy with generic promotional slogans.", "Don't claim browser verification from source inspection alone."]
+  }
+}
