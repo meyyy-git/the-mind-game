@@ -29,8 +29,11 @@ input { caret-color: var(--gold); }
 .brand>svg { width: 38px; color: var(--gold); }
 .brand-dot { color: var(--gold); }
 .header nav { display: flex; align-items: center; gap: 12px; }
-.header select { width: 65px; min-height: 44px; padding: 8px; background: transparent; border: 0; color: var(--text); font-size: 13px; }
-.header select option { background: var(--panel); }
+.language-picker { position: relative; display: inline-flex; align-items: center; }
+.language-picker::after { content: '⌄'; position: absolute; right: 10px; top: 50%; transform: translateY(-55%); pointer-events: none; color: var(--muted); font-size: 13px; }
+.header select { appearance: none; width: 68px; min-height: 44px; padding: 8px 28px 8px 12px; border: 1px solid #62506f; border-radius: 10px; background: #241d31; color: var(--text); font-size: 12px; font-weight: 600; letter-spacing: .06em; cursor: pointer; }
+.header select:hover { border-color: var(--gold); background: #352940; }.header select:focus-visible { border-color: var(--mint); outline: 2px solid var(--mint); }
+.header select option { background: var(--panel); color: var(--text); }
 .icon-button { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 12px; background: #211c2c; }
 .text-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 0; min-height: 44px; border: 0; background: transparent; color: var(--muted); font-size: 13px; }
 .text-button:hover,.icon-button:hover { color: var(--gold); }
@@ -188,7 +191,7 @@ footer .text-button { font-size: 12px; }
 @keyframes inventory-change { from { transform: scale(1.12); } to { transform: scale(1); } }
 @keyframes card-landed { 0% { transform: translateY(-10px) scale(1.04); } 65% { transform: translateY(2px) scale(.98); } 100% { transform: translateY(0) scale(1); } }
 @media (max-width: 760px) {
-  .shell { padding: 0 18px; }.header { min-height: 70px; }.brand { font-size: 23px; gap: 7px; }.brand>svg { width: 29px; }.header nav { gap: 7px; }.guide-link { width: 38px; }.guide-link>span { display: none; }.header select { width: 54px; padding: 8px 4px; }.icon-button { width: 40px; height: 44px; }
+  .shell { padding: 0 18px; }.header { min-height: 70px; }.brand { font-size: 23px; gap: 7px; }.brand>svg { width: 29px; }.header nav { gap: 7px; }.guide-link { width: 38px; }.guide-link>span { display: none; }.header select { width: 60px; padding: 8px 25px 8px 9px; }.language-picker::after { right: 8px; }.icon-button { width: 40px; height: 44px; }
   .title-screen { padding: 12px 0 30px; }.title-emblem { width: 88px; height: 64px; margin-bottom: 20px; }.title-emblem>svg { width: 58px; }.emblem-ring { width: 62px; height: 62px; }.game-title { font-size: clamp(52px,12vw,76px); margin-bottom: 15px; }.title-description { max-width: 320px; font-size: 14px; margin-bottom: 22px; }.game-menu { max-width: 380px; padding: 20px; }.menu-deck { display: none; }.menu-facts { margin-top: 20px; font-size: 12px; }
   footer { font-size: 11px; }footer .text-button { font-size: 12px; }.join-page { padding: 26px 0; }
   .room-toolbar { margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }.room-toolbar>div { flex: 1; justify-content: space-between; gap: 10px; }.connection-label { font-size: 11px; }.room-code { font-size: 14px; }
