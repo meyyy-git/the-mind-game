@@ -4,7 +4,7 @@ Permainan kartu kooperatif 2–4 pemain di browser. Room privat, sesi tanpa akun
 
 ## Menjalankan lokal
 
-Memerlukan Bun 1.4.0 atau versi kompatibel. Dependency dikunci di `bun.lock`.
+Memerlukan Bun 1.4.2 atau versi kompatibel. Dependency dikunci di `bun.lock`.
 
 ```sh
 bun install --frozen-lockfile
