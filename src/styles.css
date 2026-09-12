@@ -7,6 +7,7 @@
   font-family: 'Segoe UI', system-ui, sans-serif; background: var(--ink); color: var(--text); font-synthesis: none;
 }
 * { box-sizing: border-box; }
+html, body { overflow-x: clip; }
 body { margin: 0; min-width: 320px; background: var(--ink); }
 body::before { content: ''; position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 0%,#31274370,transparent 66%); z-index: -1; }
 button,input,select { font: inherit; }
@@ -94,7 +95,7 @@ footer .text-button { font-size: 12px; }
 .connection-label { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
 .connection-dot { width: 7px; height: 7px; border-radius: 50%; background: #95839e; display: inline-block; flex-shrink: 0; }
 .connection-dot.online { background: var(--mint); }
-.table-area { position: relative; isolation: isolate; padding: 15px 28px 0; text-align: center; min-width: 0; }
+.table-area { position: relative; isolation: isolate; padding: 15px 28px 0; text-align: center; min-width: 0; overflow-x: clip; }
 .table-area::before { content: ''; position: absolute; z-index: -1; inset: 110px 0 190px; min-height: 260px; border: 10px solid #1c1728; outline: 1px solid #645172; outline-offset: -16px; border-radius: 180px; background: radial-gradient(ellipse at 50% 20%,#39314f,#242235 76%); box-shadow: 0 20px 50px #0004; }
 .in-lobby .table-area::before { bottom: 35px; }
 .table-players { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 14px; max-width: 780px; margin: 0 auto 8px; }
