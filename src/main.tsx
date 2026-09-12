@@ -5,6 +5,7 @@ import { io, type Socket } from 'socket.io-client';
 import type { Action, GameResult, Reply, RoomView } from '../shared/types';
 import { ConfirmDialog, Icon, InviteCode, interruptsGame, ResultDialog } from './ui';
 import './styles.css';
+import { GuideContent } from './GuideContent';
 
 type Language = 'id' | 'en';
 type Translate = (id: string, en: string) => string;
@@ -130,23 +131,18 @@ function Eye({ className = '' }: { className?: string }) {
 }
 function Guide({ close }: { close: () => void }) {
   const { t } = useGame(); const ref = useRef<HTMLDialogElement>(null);
-  useEffect(() => { ref.current?.showModal(); }, []);
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null;
+    ref.current?.showModal();
+    return () => { if (previous?.isConnected) previous.focus(); };
+  }, []);
   return <dialog ref={ref} onCancel={close} onClick={e => { if (e.target === e.currentTarget) close(); }} className="guide" aria-labelledby="guide-title">
-    <button className="icon-button close" onClick={close} aria-label={t('Tutup panduan', 'Close guide')}><Icon name="close"/></button>
-    <h2 id="guide-title">{t('Cara bermain', 'How to play')}</h2>
-    <p>{t('Kalian satu tim. Mainkan semua kartu dari angka terkecil ke terbesar, tanpa membocorkan isi tangan. Tidak ada giliran.', 'You are one team. Play every card from lowest to highest, without revealing your hand. There are no turns.')}</p>
-    <ol>
-      <li><strong>{t('Siapkan pikiran.', 'Get in sync.')}</strong> {t('Setiap level memberi kartu sejumlah level kepada setiap pemain. Semua menekan Siap untuk mulai.', 'Each player receives as many cards as the level number. Everyone presses Ready to begin.')}</li>
-      <li><strong>{t('Percayai timing.', 'Trust your timing.')}</strong> {t('Ketuk kartu terendah saat kamu merasa waktunya tepat. Tanpa konfirmasi dan tanpa undo.', 'Tap your lowest card when the moment feels right. No confirmation and no undo.')}</li>
-      <li><strong>{t('Saling menjaga.', 'Stay together.')}</strong> {t('Kartu yang terlewat dibuka dan dibuang. Tim kehilangan satu nyawa per kesalahan, lalu bersiap kembali.', 'Missed cards are revealed and discarded. The team loses one life per mistake, then gets ready again.')}</li>
-      <li><strong>Shuriken.</strong> {t('Jika semua setuju, satu shuriken membuang kartu terendah masing-masing pemain. Pemain offline tetap harus menyetujui.', 'With unanimous approval, one shuriken discards each player’s lowest card. Offline players must return to vote.')}</li>
-    </ol>
-    <table><thead><tr><th>{t('Pemain', 'Players')}</th><th>{t('Nyawa', 'Lives')}</th><th>{t('Target level', 'Final level')}</th></tr></thead><tbody>{[[2, 2, 12], [3, 3, 10], [4, 4, 8]].map(row => <tr key={row[0]}>{row.map((n, i) => <td key={i}>{n}</td>)}</tr>)}</tbody></table>
-    <p>{t('Mulai dengan 1 shuriken. Hadiah: shuriken di level 2, 5, 8; nyawa di level 3, 6, 9. Maksimum 3 shuriken dan 5 nyawa.', 'Start with 1 shuriken. Rewards: shuriken at levels 2, 5, 8; lives at levels 3, 6, 9. Maximum 3 shuriken and 5 lives.')}</p>
-    <h3>{t('Di meja online', 'At the online table')}</h3>
-    <p>{t('Urutan mengikuti aksi yang diterima server; koneksi dapat memengaruhi timing. Host mengatur jeda saat koneksi putus. Kartu pemain offline tetap dihitung. Tidak ada tombol fokus ulang, riwayat kartu, atau alat bantu hitung waktu.', 'Order follows the actions received by the server; connection speed can affect timing. The host configures disconnect pauses. Offline players’ cards still count. There is no refocus button, card history, or timing aid.')}</p>
-    <p className="muted">{t('Sesi kembali di browser yang sama. Room berakhir 24 jam setelah pemain terakhir keluar. Penonton tidak memperpanjang waktu ini.', 'Resume in the same browser. Rooms expire 24 hours after the last player leaves. Spectators do not extend this time.')}</p>
-    <button className="primary full" onClick={close}>{t('Mengerti, kembali ke meja', 'Got it, back to the table')}</button>
+    <header className="guide-header">
+      <h2 id="guide-title">{t('Cara bermain', 'How to play')}</h2>
+      <button autoFocus className="icon-button close" onClick={close} aria-label={t('Tutup panduan', 'Close guide')}><Icon name="close"/></button>
+    </header>
+    <GuideContent t={t}/>
+    <div className="guide-footer"><button className="primary full" onClick={close}>{t('Kembali ke permainan', 'Back to the game')}</button></div>
   </dialog>;
 }
 function Shell() {
