@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { interruptsGame, ResultDialog, InviteCode } from '../src/ui';
+import { interruptsGame, maskInviteCode, ResultDialog, InviteCode } from '../src/ui';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { GameResult } from '../shared/types';
@@ -11,6 +11,11 @@ test('hidden invite code is replaced rather than exposed in accessible markup', 
   expect(render(true)).toContain('aria-pressed="true"');
   expect(render(false)).toContain('ABC123');
   expect(render(false)).toContain('Sembunyikan kode undangan');
+});
+
+test('invite code masking keeps only the final two characters', () => {
+  expect(maskInviteCode('A2CB62')).toBe('••••62');
+  expect(maskInviteCode('AB')).toBe('AB');
 });
 
 test('exit confirmation distinguishes spectators, players and completed games', () => {

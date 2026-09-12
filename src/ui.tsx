@@ -19,6 +19,10 @@ export function Icon({ name, className = '' }: { name: 'arrow' | 'copy' | 'check
   return <svg className={`ui-icon ${className}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 }
 
+export function maskInviteCode(code: string) {
+  return code.length > 2 ? '•'.repeat(code.length - 2) + code.slice(-2) : code;
+}
+
 export function InviteCode({ code, hidden, onToggle, t }: { code: string; hidden: boolean; onToggle: () => void; t: (id: string, en: string) => string }) {
   const label = hidden ? t('Tampilkan kode undangan', 'Show invite code') : t('Sembunyikan kode undangan', 'Hide invite code');
   return <span className="invite-code-group"><strong className="room-code" aria-label={hidden ? t('Kode undangan disembunyikan', 'Invite code hidden') : undefined}>{hidden ? '••••••' : code}</strong><button type="button" className="icon-button" onClick={onToggle} aria-label={label} title={label} aria-pressed={hidden}><Icon name={hidden ? 'eyeOff' : 'eye'}/></button></span>;

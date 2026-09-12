@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createRootRoute, createRoute, createRouter, Link, Outlet, RouterProvider, useNavigate } from '@tanstack/react-router';
 import { io, type Socket } from 'socket.io-client';
 import type { Action, GameResult, Reply, RoomView } from '../shared/types';
-import { ConfirmDialog, Icon, InviteCode, interruptsGame, ResultDialog } from './ui';
+import { ConfirmDialog, Icon, InviteCode, interruptsGame, maskInviteCode, ResultDialog } from './ui';
 import './styles.css';
 import { GuideContent } from './GuideContent';
 
@@ -181,7 +181,7 @@ function Home() {
         <button className="primary full" disabled={busy || !connected}>{busy ? t('Menghubungkan…', 'Connecting…') : mode === 'create' ? t('Buat room', 'Create room') : t('Gabung room', 'Join room')} <Icon name="arrow"/></button>
         {!connected && <p className="form-status" role="status">{t('Sedang menghubungkan ke permainan…', 'Connecting to the game…')}</p>}
         <p className="privacy-note">{t('Bagikan kode room untuk mengajak teman bermain.', 'Share your room code to invite friends.')}</p>
-        {/^[A-Z0-9]{6}$/.test(lastRoom) && <Link className="last-room" to="/room/$code" params={{ code: lastRoom }}>{t('Kembali ke room terakhir', 'Return to your last room')} · {lastRoom} →</Link>}
+        {/^[A-Z0-9]{6}$/.test(lastRoom) && <Link className="last-room" to="/room/$code" params={{ code: lastRoom }}>{t('Kembali ke room terakhir', 'Return to your last room')} · {maskInviteCode(lastRoom)} <Icon name="arrow"/></Link>}
       </form>}
     </section>
     <div className="menu-deck menu-deck-left" aria-hidden="true"><span>17</span><Eye/><b>17</b></div>
@@ -194,7 +194,7 @@ function RoomPage() {
   const code = routeCode.toUpperCase();
   const { t, room, name, enter, connected, busy, action, fatal, error } = useGame();
   const attempted = useRef(false), [copied, setCopied] = useState(false);
-  const [hideCode, setHideCode] = useState(() => read('minds.hideCode') === 'true');
+  const [hideCode, setHideCode] = useState(() => read('minds.hideCode') !== 'false');
   const [notice, setNotice] = useState<GameResult | null>(null);
   useEffect(() => {
     if (room?.members.find(m => m.id === room.self)?.role === 'player' && room?.code === code && room.result && read('minds.result:' + code) !== room.result.id) setNotice(room.result);
