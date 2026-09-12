@@ -196,8 +196,16 @@ function RoomPage() {
   const attempted = useRef(false), [copied, setCopied] = useState(false);
   const [hideCode, setHideCode] = useState(() => read('minds.hideCode') !== 'false');
   const [notice, setNotice] = useState<GameResult | null>(null);
+  const resultTimer = useRef<number | null>(null);
   useEffect(() => {
-    if (room?.members.find(m => m.id === room.self)?.role === 'player' && room?.code === code && room.result && read('minds.result:' + code) !== room.result.id) setNotice(room.result);
+    const result = room?.result;
+    const isPlayer = room?.members.find(m => m.id === room.self)?.role === 'player';
+    if (resultTimer.current !== null) window.clearTimeout(resultTimer.current);
+    if (isPlayer && room?.code === code && result && read('minds.result:' + code) !== result.id) {
+      const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      resultTimer.current = window.setTimeout(() => setNotice(result), reduced ? 0 : 320);
+    }
+    return () => { if (resultTimer.current !== null) window.clearTimeout(resultTimer.current); };
   }, [room?.result?.id, code]);
   function closeResult() {
     if (notice) write('minds.result:' + code, notice.id);
