@@ -91,7 +91,7 @@ function Provider({ children }: { children: React.ReactNode }) {
     s.on('connect', joinAgain);
     s.on('disconnect', () => { setConnected(false); setBusy(false); });
     s.on('connect_error', () => setError('network'));
-    s.on('fatal', (code: string) => { setFatal(code); setBusy(false); joined.current = ''; });
+    s.on('fatal', (code: string) => { setFatal(code); setBusy(false); joined.current = ''; setRoom(null); setError(''); });
     s.on('state', (state: RoomView) => {
       setRoom(state);
       if (lastEvent.current && lastEvent.current !== state.event.id && !mute.current) sound(state.event.kind);
