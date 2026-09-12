@@ -140,7 +140,7 @@ Sebagai pemain, saya ingin kesalahan dijelaskan bersama agar memahami kehilangan
 - Kartu pemicu tetap menjadi kartu teratas; kartu yang dibuang tidak menggantikannya.
 - Setelah resolusi, pemain online menekan “Siap”; level tidak dimulai ulang.
 - Jika nyawa habis, hasilnya kalah dan tidak meminta siap untuk melanjutkan.
-- Revisi terbaru: kesalahan urutan kartu juga membuka popup pribadi berisi kartu terlewat dan sisa nyawa. Jika nyawa habis, tampilkan popup kalah saja. Setelah kesalahan nonfatal, pemain menutup popup lalu menekan “Siap”.
+- Revisi terbaru: kesalahan urutan kartu juga membuka popup pribadi berisi kartu terlewat dan sisa nyawa. Jika nyawa habis, tampilkan popup kalah saja. Setelah kesalahan nonfatal, pemain menutup popup lalu menekan “Siap”. Level tidak pernah naik karena kesalahan; jika pembuangan kartu mengosongkan semua tangan, level yang sama dibagikan ulang.
 - Popup hasil mencatat level yang selesai/gagal, sisa nyawa/shuriken, dan hadiah yang benar-benar ditambahkan (tanpa hadiah palsu ketika inventori penuh).
 - Popup menang/kalah juga menampilkan ringkasan pertandingan: jumlah kesalahan dan jumlah shuriken yang dipakai.
 - Popup ditutup per peserta. Menutupnya tidak menutup popup peserta lain dan tidak otomatis menandai siap. Keputusan penutupan disimpan di browser; hasil terakhir disimpan di room untuk reconnect.

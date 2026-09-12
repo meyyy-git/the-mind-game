@@ -54,6 +54,16 @@ describe('original rules and online state', () => {
     expect(r.result?.reward.stars).toBe(0); expect(r.result?.stars).toBe(3);
     expect(r.result?.shurikensUsed).toBe(0);
   });
+  test('a mistake never advances the level; if it empties every hand, the same level is dealt again', () => {
+    const r = table(); const [a, b] = players(r);
+    r.level = 3; a.hand = [20]; b.hand = [10];
+    send(r, a.id, { type: 'play', card: 20 });
+    expect(r.level).toBe(3); expect(r.lives).toBe(1); expect(r.reason).toBe('mistake');
+    ready(r);
+    expect(r.level).toBe(3); expect(r.phase).toBe('ready');
+    expect(a.hand).toHaveLength(3); expect(b.hand).toHaveLength(3);
+    ready(r); expect(r.phase).toBe('active');
+  });
   for (const [n, target] of [[2, 12], [3, 10], [4, 8]]) test(`${n} players can complete all ${target} levels and rematch`, () => {
     const r = table(n); expect(r.lives).toBe(n); expect(r.stars).toBe(1); expect(r.target).toBe(target);
     let moves = 0;
@@ -82,12 +92,12 @@ describe('original rules and online state', () => {
     send(r, a.id, { type: 'play', card: 50 }); expect(r.phase).toBe('finished'); expect(r.reason).toBe('lost'); expect(r.level).toBe(1);
     expect(r.result).toMatchObject({kind:'lost',level:1,lives:0,reward:{lives:0,stars:0}});
   });
-  test('mistake and shuriken reveal remain visible before moving to the next level', () => {
+  test('mistake and shuriken reveal remain visible while the same level continues', () => {
     const r = table(); const [a,b] = players(r); a.hand=[20]; b.hand=[10];
     send(r,a.id,{type:'play',card:20}); expect(r.phase).toBe('ready'); expect(r.level).toBe(1);
-    ready(r); expect(r.level).toBe(2); expect(r.phase).toBe('ready'); expect(a.hand.length).toBe(2);
-    ready(r); send(r,a.id,{type:'propose'}); send(r,b.id,{type:'vote',yes:true});
-    expect(r.stars).toBe(0); expect(a.hand.length).toBe(1); expect(r.revealed.length).toBe(2);
+    ready(r); expect(r.level).toBe(1); expect(r.phase).toBe('ready'); expect(a.hand.length).toBe(1);
+    ready(r); a.hand=[20]; b.hand=[30]; send(r,a.id,{type:'propose'}); send(r,b.id,{type:'vote',yes:true});
+    expect(r.stars).toBe(0); expect(a.hand.length).toBe(0); expect(r.revealed.length).toBe(2); expect(r.level).toBe(1);
   });
   test('vote rejects without spending, waits for offline approval, cannot be bypassed by host', () => {
     const r = table(); const [a,b] = players(r);

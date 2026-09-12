@@ -118,7 +118,9 @@ export function act(r: Room, memberId: string, a: Action, now = Date.now()) {
     case 'ready':
       isPlayer(); requireThat(r.phase === 'ready', 'phase'); m.ready = true;
       if (r.phase === 'ready' && players(r).filter(m => m.online).every(m => m.ready)) {
-        transition(r, 'active'); r.revealed = []; event(r, 'active');
+        const retrySameLevel = r.reason === 'mistake' && r.lives > 0 && players(r).every(p => p.hand.length === 0);
+        if (retrySameLevel) deal(r);
+        else { transition(r, 'active'); r.revealed = []; event(r, 'active'); }
       }
       break;
     case 'unready':
