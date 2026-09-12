@@ -2,8 +2,8 @@ import React, { createContext, useContext, useEffect, useRef, useState } from 'r
 import { createRoot } from 'react-dom/client';
 import { createRootRoute, createRoute, createRouter, Link, Outlet, RouterProvider, useNavigate } from '@tanstack/react-router';
 import { io, type Socket } from 'socket.io-client';
-import type { Action, Reply, RoomView } from '../shared/types';
-import { ConfirmDialog, Icon, interruptsGame } from './ui';
+import type { Action, GameResult, Reply, RoomView } from '../shared/types';
+import { ConfirmDialog, Icon, InviteCode, interruptsGame, ResultDialog } from './ui';
 import './styles.css';
 
 type Language = 'id' | 'en';
@@ -23,7 +23,7 @@ const messages: Record<string, [string, string]> = {
   card: ['Hanya kartu terendah yang dapat dimainkan.', 'Only your lowest card can be played.'],
   hostOnly: ['Hanya host yang dapat melakukan ini.', 'Only the host can do this.'],
   playerOnly: ['Aksi ini hanya untuk pemain.', 'This action is for players only.'],
-  notReady: ['Perlu 2–4 pemain online yang semuanya siap.', 'You need 2–4 online players, all ready.'],
+  notReady: ['Perlu 2–4 pemain yang semuanya terhubung.', 'You need 2–4 connected players.'],
   rate: ['Terlalu banyak aksi. Tunggu sebentar, lalu coba lagi.', 'Too many actions. Wait a moment and try again.'],
   capacity: ['Server sedang penuh. Coba lagi nanti.', 'The server is full. Please try again later.'],
   storage: ['Progres tidak dapat disimpan. Permainan dihentikan; hubungi host.', 'Progress could not be saved. Play is stopped; contact the host.'],
@@ -42,7 +42,7 @@ const reasons: Record<string, [string, string]> = {
   won: ['Semua level selesai. Kalian menang bersama.', 'Every level completed. Your team wins.'],
   lost: ['Nyawa habis. Kembali ke lobi untuk mencoba lagi.', 'No lives left. Return to the lobby to try again.'],
   cancelled: ['Permainan dibatalkan. Siapkan tim baru.', 'Game cancelled. Get the team ready again.'],
-  welcome: ['Bagikan undangan, lalu tekan Siap saat semua sudah bergabung.', 'Share an invitation, then press Ready when everyone has joined.'],
+  welcome: ['Undang temanmu. Host membagikan kartu setelah pemain bergabung.', 'Invite your friends. The host deals the cards once players have joined.'],
 };
 function read(key: string, fallback = '') { try { return localStorage.getItem(key) ?? fallback; } catch { return fallback; } }
 function write(key: string, value: string) { try { localStorage.setItem(key, value); } catch { /* browser privacy mode */ } }
@@ -159,7 +159,7 @@ function Shell() {
         <select aria-label={t('Bahasa', 'Language')} value={lang} onChange={e => setLang(e.target.value as Language)}><option value="id">ID</option><option value="en">EN</option></select>
       </nav>
     </header>
-    {message && <div className="alert" role="alert">{t(...message)} {fatal && <a href="/">{t('Kembali ke awal', 'Back to home')} →</a>}</div>}
+    {message && (!error || fatal || !(typeof window !== 'undefined' && window.location.pathname.startsWith('/room/'))) && <div className="alert" role="alert">{t(...message)} {fatal && <a href="/">{t('Kembali ke awal', 'Back to home')} →</a>}</div>}
     <Outlet/>
     <footer><span>{t('Room privat · 2–4 pemain', 'Private rooms · 2–4 players')}</span><button className="text-button" onClick={() => setGuide(true)}>{t('Aturan permainan', 'Game rules')} <Icon name="help"/></button></footer>
     {guide && <Guide close={() => setGuide(false)}/>}
@@ -198,6 +198,15 @@ function RoomPage() {
   const code = routeCode.toUpperCase();
   const { t, room, name, enter, connected, busy, action, fatal, error } = useGame();
   const attempted = useRef(false), [copied, setCopied] = useState(false);
+  const [hideCode, setHideCode] = useState(() => read('minds.hideCode') === 'true');
+  const [notice, setNotice] = useState<GameResult | null>(null);
+  useEffect(() => {
+    if (room?.members.find(m => m.id === room.self)?.role === 'player' && room?.code === code && room.result && read('minds.result:' + code) !== room.result.id) setNotice(room.result);
+  }, [room?.result?.id, code]);
+  function closeResult() {
+    if (notice) write('minds.result:' + code, notice.id);
+    setNotice(null);
+  }
   const [confirmation, setConfirmation] = useState<{ type: 'leave' | 'cancel' | 'kick' | 'resume'; target?: string; epoch: number } | null>(null);
   useEffect(() => { if (connected && name && room?.code !== code && !attempted.current && !fatal) { attempted.current = true; void enter(code); } }, [connected, code, room, name, fatal]);
   if (fatal) return <main className="empty-state"><Eye/><h1>{t('Sampai bertemu lagi.', 'Until next time.')}</h1><a className="primary" href="/">{t('Kembali ke awal', 'Back to home')}</a></main>;
@@ -206,7 +215,11 @@ function RoomPage() {
   const host = room.host === self.id, playing = self.role === 'player', isLobby = room.phase === 'lobby';
   const participants = room.members.filter(m => m.role === 'player'), spectators = room.members.filter(m => m.role === 'spectator');
   const disabled = busy || !connected;
-  const allReady = participants.length >= 2 && participants.every(m => m.online && m.ready);
+  const canDeal = participants.length >= 2 && participants.every(m => m.online);
+  const onlinePlayers = participants.filter(m => m.online);
+  const readyPlayers = onlinePlayers.filter(m => m.ready);
+  const waitingNames = participants.filter(m => !m.online || !m.ready).map(m => m.name).join(', ');
+  const phaseLabel = isLobby ? t('LOBI', 'LOBBY') : room.phase === 'ready' ? t('SIAP UNTUK LEVEL', 'READY FOR LEVEL') : room.phase === 'active' ? t('PERMAINAN BERJALAN', 'GAME IN PROGRESS') : room.phase === 'vote' ? 'SHURIKEN' : room.phase === 'paused' ? t('DIJEDA', 'PAUSED') : t('SELESAI', 'FINISHED');
   const title = room.phase === 'active' ? t('Mainkan kartumu', 'Play your cards') : room.phase === 'vote' ? t('Gunakan shuriken?', 'Use a shuriken?') : room.phase === 'paused' ? t('Permainan dijeda', 'Game paused') : room.phase === 'finished' ? room.reason === 'won' ? t('Kalian menang!', 'You win!') : t('Permainan berakhir', 'Game over') : t('Siap untuk level ini?', 'Ready for this level?');
   async function copy() { try { await navigator.clipboard.writeText(location.origin + '/room/' + code); setCopied(true); setTimeout(() => setCopied(false), 2500); } catch { window.prompt(t('Salin tautan ini', 'Copy this link'), location.href); } }
   function confirmAction(type: 'leave' | 'cancel' | 'kick' | 'resume', target?: string) {
@@ -215,35 +228,36 @@ function RoomPage() {
   const selected = room.members.find(m => m.id === confirmation?.target) ?? self;
   const pendingLabel = confirmation?.type === 'resume' ? t('Tetap lanjutkan', 'Continue anyway') : confirmation?.type === 'kick' ? t('Keluarkan peserta', 'Remove participant') : confirmation?.type === 'cancel' ? t('Akhiri pertandingan', 'End game') : t('Keluar room', 'Leave room');
   return <main className={'room-layout ' + (isLobby ? 'in-lobby' : 'in-game')}>
-    <div className="room-toolbar"><div><strong className="room-code">{code}</strong><button className="invite-button" onClick={copy}><Icon name={copied ? 'check' : 'copy'}/><span aria-live="polite">{copied ? t('Tautan disalin', 'Link copied') : t('Salin undangan', 'Copy invite')}</span></button></div><span className="connection-label"><span className={'connection-dot ' + (connected ? 'online' : '')}/>{connected ? t('Terhubung', 'Connected') : t('Menyambungkan kembali…', 'Reconnecting…')}</span></div>
+    <div className="room-toolbar"><div><InviteCode code={code} hidden={hideCode} onToggle={() => { setHideCode(!hideCode); write('minds.hideCode', String(!hideCode)); }} t={t}/><button className="invite-button" onClick={copy}><Icon name={copied ? 'check' : 'copy'}/><span aria-live="polite">{copied ? t('Tautan disalin', 'Link copied') : t('Salin undangan', 'Copy invite')}</span></button></div><span className="connection-label"><span className={'connection-dot ' + (connected ? 'online' : '')}/>{connected ? t('Terhubung', 'Connected') : t('Menyambungkan kembali…', 'Reconnecting…')}</span></div>
 
     <section className="table-area">
       <div className="table-players" aria-label={t('Pemain di meja', 'Players at the table')}>
         {Array.from({ length: 4 }, (_, i) => { const m = participants[i]; return m ? <div className={`table-player tone-${i} ${m.id === self.id ? 'is-self' : ''} ${m.ready ? 'is-ready' : ''} ${!m.online ? 'is-offline' : ''}`} key={m.id}>
           <div className="player-token"><span>{m.name.slice(0, 1).toUpperCase()}</span>{m.ready && <Icon name="check"/>}</div>
           <strong>{m.name}{m.id === self.id && <small>{t(' (kamu)', ' (you)')}</small>}</strong>
-          <span className="player-status">{!m.online ? t('Terputus', 'Disconnected') : m.ready ? t('Siap', 'Ready') : isLobby ? t('Belum siap', 'Not ready') : `${m.count} ${t('kartu', 'cards')}`}</span>
+          <span className="player-status">{!m.online ? t('Terputus', 'Disconnected') : m.ready ? t('Siap', 'Ready') : isLobby ? t('Bergabung', 'Joined') : `${m.count} ${t('kartu', 'cards')}`}</span>
           {!isLobby && <div className="hidden-hand" aria-hidden="true">{Array.from({ length: Math.min(m.count, 3) }, (_, n) => <i key={n}/>)}</div>}
         </div> : <button className="table-player empty-player" key={i} onClick={copy}><span className="player-token"><Icon name="plus"/></span><strong>{isLobby ? t('Undang teman', 'Invite friend') : t('Undang penonton', 'Invite spectator')}</strong><span className="player-status">{t('Kursi kosong', 'Empty seat')}</span></button>; })}
       </div>
-      {!isLobby && <div className="game-stats"><div><span className="eyebrow">LEVEL</span><strong>{room.level}<small> / {room.target}</small></strong></div><div><span className="eyebrow">{t('NYAWA', 'LIVES')}</span><strong className="lives" aria-label={`${room.lives} ${t('nyawa', 'lives')}`}>{Array.from({ length: room.lives }, (_, i) => <Icon name="heart" key={i}/>)}</strong></div><div><span className="eyebrow">SHURIKEN</span><strong className="stars"><Icon name="star"/> <small>× {room.stars}</small></strong></div></div>}
-      <div className="table-message" aria-live="polite"><h2>{isLobby ? t('Menunggu pemain', 'Waiting for players') : title}</h2><p>{isLobby ? t(...(reasons[room.reason] ?? reasons.welcome)) : room.phase === 'active' ? t('Ketuk kartu terendah saat waktunya terasa pas.', 'Tap your lowest card when the moment feels right.') : room.phase === 'vote' ? t('Semua pemain harus setuju, termasuk yang sedang offline.', 'Everyone needs to agree, including players who are offline.') : t(...(reasons[room.reason] ?? reasons.welcome))}</p></div>
-      {isLobby ? <div className="lobby-center"><div className="lobby-invite"><div className="invitation-cards" aria-hidden="true"><span>17</span><span>34</span><span>68</span></div><button className="secondary" onClick={copy}><Icon name={copied ? 'check' : 'copy'}/>{copied ? t('Undangan disalin', 'Invite copied') : t('Undang teman', 'Invite friends')}</button></div><div className="lobby-actions">{playing && <button className={self.ready ? 'secondary ready-state' : 'primary'} disabled={disabled || self.ready} onClick={() => action({ type: 'ready' })}>{self.ready && <Icon name="check"/>}{self.ready ? t('Kamu siap', 'You’re ready') : t('Aku siap', 'I’m ready')}</button>}{host && <button className="primary" disabled={disabled || !allReady} onClick={() => action({ type: 'start' })}>{t('Mulai permainan', 'Start game')} <Icon name="arrow"/></button>}</div><p className="waiting-note" role="status">{participants.length < 2 ? t('Perlu ', 'Need ') + (2 - participants.length) + t(' pemain lagi untuk mulai.', ' more player(s) to begin.') : !allReady ? t('Menunggu siap: ', 'Waiting for: ') + participants.filter(m => !m.ready || !m.online).map(m => m.name).join(', ') : host ? t('Semua siap. Kamu bisa mulai!', 'Everyone’s ready. Start when you like!') : t('Semua siap. Menunggu host memulai.', 'Everyone’s ready. Waiting for the host to start.')}</p></div> : <>
+      {!isLobby && <div className="game-stats"><div className="level-stat"><span className="eyebrow">LEVEL</span><strong>{room.level}<small> / {room.target}</small></strong><div className="level-progress" role="progressbar" aria-valuemin={0} aria-valuemax={room.target} aria-valuenow={room.level} aria-label={t(`Level ${room.level} dari ${room.target}`, `Level ${room.level} of ${room.target}`)}>{Array.from({ length: room.target }, (_, index) => <i key={index} className={index + 1 < room.level ? 'done' : index + 1 === room.level ? 'current' : ''}/>)}</div></div><div><span className="eyebrow">{t('NYAWA', 'LIVES')}</span><strong className="lives" key={room.lives} aria-label={`${room.lives} ${t('nyawa', 'lives')}`}>{Array.from({ length: room.lives }, (_, i) => <Icon name="heart" key={i}/>)}</strong></div><div><span className="eyebrow">SHURIKEN</span><strong className="stars"><Icon name="star"/> <small>× {room.stars}</small></strong></div></div>}
+      {error && !fatal && <div className="room-action-alert" role="alert">{messages[error] ? t(...messages[error]) : t('Aksi tidak dapat dilakukan. Coba lagi.', 'That action could not be completed. Try again.')}</div>}
+      <div className="table-message" aria-live="polite"><span className="phase-label">{phaseLabel}</span><h2>{isLobby ? t('Menunggu pemain', 'Waiting for players') : title}</h2><p>{isLobby ? t(...(reasons[room.reason] ?? reasons.welcome)) : room.phase === 'active' ? t('Ketuk kartu terendah saat waktunya terasa pas.', 'Tap your lowest card when the moment feels right.') : room.phase === 'vote' ? t('Semua pemain harus setuju, termasuk yang sedang offline.', 'Everyone needs to agree, including players who are offline.') : t(...(reasons[room.reason] ?? reasons.welcome))}</p></div>
+      {isLobby ? <div className="lobby-center"><div className="lobby-invite"><div className="invitation-cards" aria-hidden="true"><span>17</span><span>34</span><span>68</span></div><button className="secondary" onClick={copy}><Icon name={copied ? 'check' : 'copy'}/>{copied ? t('Undangan disalin', 'Invite copied') : t('Undang teman', 'Invite friends')}</button></div><div className="lobby-actions">{host && <button className="primary" disabled={disabled || !canDeal} onClick={() => action({ type: 'start' })}>{t('Bagikan kartu', 'Deal cards')} <Icon name="arrow"/></button>}</div><div className="ready-summary" role="status"><strong>{readyPlayers.length}/{onlinePlayers.length}</strong><span>{participants.length < 2 ? t('Butuh satu pemain lagi.', 'One more player is needed.') : !canDeal ? t('Menunggu terhubung: ', 'Waiting to connect: ') + waitingNames : host ? t('Semua bergabung. Bagikan kartu untuk mulai.', 'Everyone joined. Deal cards to begin.') : t('Menunggu host membagikan kartu.', 'Waiting for the host to deal.')}</span></div></div> : <>
         <p className="sr-only" role="status" aria-atomic="true">{room.top === null ? t('Belum ada kartu dimainkan.', 'No card played yet.') : t('Kartu teratas: ', 'Top card: ') + room.top}</p>
-        <div className="play-surface"><span className="surface-line left"/><div className={'table-card ' + (room.top === null ? 'card-back' : '')} key={`${room.gameId}-${room.level}-${room.top}`} aria-hidden="true">{room.top === null ? <Eye/> : <><span>{room.top}</span><strong>{room.top}</strong><span>{room.top}</span></>}</div><span className="surface-line right"/></div>
+        <div className="play-surface"><span className="surface-line left"/><div className={'table-card ' + (room.top === null ? 'card-back' : '') + (room.event.kind === 'card' ? ' card-landed' : '')} key={`${room.gameId}-${room.level}-${room.top}`} aria-hidden="true">{room.top === null ? <Eye/> : <><span>{room.top}</span><strong>{room.top}</strong><span>{room.top}</span></>}</div><span className="surface-line right"/></div>
         {room.revealed.length > 0 && <div className="revealed" aria-live="polite"><span>{t('Kartu dibuang', 'Cards discarded')}</span><div>{[...room.revealed].sort((a, b) => a - b).map(c => <span key={c}>{c}</span>)}</div></div>}
         <div className="phase-actions">
-          {room.phase === 'ready' && playing && <><button className={self.ready ? 'secondary ready-state' : 'primary'} disabled={disabled || self.ready} onClick={() => action({ type: 'ready' })}>{self.ready ? t('Menunggu teman', 'Waiting for friends') : t('Aku siap', 'I’m ready')}</button><span className="muted">{participants.filter(m => m.online && m.ready).length}/{participants.filter(m => m.online).length} {t('siap', 'ready')}</span></>}
+          {room.phase === 'ready' && playing && <><button className={self.ready ? 'secondary ready-state' : 'primary'} disabled={disabled || !!notice} onClick={() => action({ type: self.ready ? 'unready' : 'ready' })}>{self.ready ? t('Batal siap', 'Cancel ready') : t('Aku siap', 'I’m ready')}</button><span className="muted">{participants.filter(m => m.online && m.ready).length}/{participants.filter(m => m.online).length} {t('siap', 'ready')}</span></>}
           {room.phase === 'paused' && host && <button className="primary" disabled={disabled} onClick={() => participants.some(m => !m.online) ? confirmAction('resume') : action({ type: 'resume' })}>{t('Lanjutkan permainan', 'Resume game')} <Icon name="arrow"/></button>}
           {room.phase === 'paused' && !host && <p className="muted">{t('Menunggu pemain kembali atau host melanjutkan.', 'Waiting for players to return or the host to resume.')}</p>}
           {room.phase === 'vote' && <><div className="vote-status">{participants.map(m => <span key={m.id} className={room.votes.includes(m.id) ? 'yes' : ''}>{m.name} {room.votes.includes(m.id) ? <Icon name="check"/> : null}</span>)}</div>{playing && <div className="vote-buttons"><button className="secondary" disabled={disabled} onClick={() => action({ type: 'vote', yes: false })}>{t('Tolak', 'Decline')}</button><button className="primary" disabled={disabled || room.votes.includes(self.id)} onClick={() => action({ type: 'vote', yes: true })}>{room.votes.includes(self.id) ? t('Sudah setuju', 'Approved') : t('Setuju', 'Approve')}</button></div>}</>}
           {room.phase === 'finished' && (host ? <button className="primary" disabled={disabled} onClick={() => action({ type: 'lobby' })}>{t('Kembali ke lobi', 'Back to lobby')} <Icon name="arrow"/></button> : <p>{t('Menunggu host kembali ke lobi.', 'Waiting for the host to return to the lobby.')}</p>)}
         </div>
-        {room.phase !== 'finished' && <section className="hand-area"><div className="hand-heading"><span className="eyebrow">{playing ? t('KARTUMU', 'YOUR HAND') : t('KAMU MENONTON', 'YOU ARE WATCHING')}</span>{playing && <span>{t('Hanya kamu yang bisa melihatnya', 'Only you can see these')}</span>}</div>{playing ? <div className="hand">{room.hand.length ? room.hand.map((card, i) => <button key={card} className={'hand-card ' + (i === 0 ? 'lowest' : '')} disabled={disabled || room.phase !== 'active' || i !== 0} aria-label={t('Mainkan kartu ', 'Play card ') + card} onClick={() => action({ type: 'play', card })}><span>{card}</span><strong>{card}</strong><span>{i === 0 ? <Icon name="arrow"/> : null}</span></button>) : <p className="muted">{t('Kartumu sudah habis. Tetap bersama tim.', 'Your hand is empty. Stay with your team.')}</p>}</div> : <p className="muted">{t('Isi tangan pemain tetap tersembunyi. Kamu bisa ikut di permainan berikutnya.', 'Players’ hands stay hidden. You can join the next game.')}</p>}
+        {room.phase !== 'finished' && <section className="hand-area"><div className="hand-heading"><span className="eyebrow">{playing ? t('KARTUMU', 'YOUR HAND') : t('KAMU MENONTON', 'YOU ARE WATCHING')}</span>{playing && <span>{t('Hanya kamu yang bisa melihatnya', 'Only you can see these')}</span>}</div>{notice ? <p className="muted">{t('Tutup hasil untuk melihat kartu.', 'Close the result to see your cards.')}</p> : playing ? <div className="hand">{room.hand.length ? room.hand.map((card, i) => <button key={card} className={'hand-card ' + (i === 0 ? 'lowest' : '')} disabled={disabled || room.phase !== 'active' || i !== 0} aria-label={t('Mainkan kartu ', 'Play card ') + card} onClick={() => action({ type: 'play', card })}><span>{card}</span><strong>{card}</strong><span>{i === 0 ? <Icon name="arrow"/> : null}</span></button>) : <p className="muted">{t('Kartumu sudah habis. Tetap bersama tim.', 'Your hand is empty. Stay with your team.')}</p>}</div> : <p className="muted">{t('Isi tangan pemain tetap tersembunyi. Kamu bisa ikut di permainan berikutnya.', 'Players’ hands stay hidden. You can join the next game.')}</p>}
           {playing && <button className="shuriken-button" disabled={disabled || room.phase !== 'active' || room.stars === 0} onClick={() => action({ type: 'propose' })}><Icon name="star"/> {t('Usulkan shuriken', 'Suggest shuriken')} <small>× {room.stars}</small></button>}
         </section>}
       </>}
-      {!isLobby && host && <button className="text-button end-game" disabled={disabled} onClick={() => confirmAction('cancel')}>{t('Akhiri pertandingan', 'End game')}</button>}
+      {!isLobby && host && !notice && <button className="text-button end-game" disabled={disabled} onClick={() => confirmAction('cancel')}>{t('Akhiri pertandingan', 'End game')}</button>}
       {!isLobby && participants.some(m => !m.online) && <p className="offline-note">{participants.filter(m => !m.online).map(m => m.name).join(', ')} {t('sedang offline. Kartunya tetap dihitung.', 'is offline. Their cards still count.')}{room.phase === 'active' && room.reconnectAt && ' ' + t('Permainan dijeda jika batas kembali terlewati.', 'Play pauses when the reconnect window ends.')}</p>}
     </section>
     <details className="room-management"><summary>{t('Pemain & pengaturan room', 'Players & room settings')}<span>{participants.length}/4 · {spectators.length} {t('penonton', 'watching')}</span></summary><aside className="roster"><div className="section-label"><h2>{t('Di meja', 'At the table')}</h2><span>{participants.length}/4</span></div>
@@ -253,7 +267,23 @@ function RoomPage() {
       {isLobby && <section className="settings"><h3>{t('Saat koneksi terputus', 'When a player disconnects')}</h3><label className="field"><span className="sr-only">{t('Kebijakan koneksi', 'Connection policy')}</span><select disabled={!host || disabled} value={room.settings.disconnect} onChange={e => action({ type: 'settings', settings: { ...room.settings, disconnect: e.target.value as 'pause' | 'continue' } })}><option value="pause">{t('Jeda otomatis', 'Pause immediately')}</option><option value="continue">{t('Lanjut sementara', 'Continue temporarily')}</option></select></label>{room.settings.disconnect === 'continue' && <label className="field">{t('Batas waktu kembali', 'Time to reconnect')}<select value={room.settings.timeout} disabled={!host || disabled} onChange={e => action({ type: 'settings', settings: { ...room.settings, timeout: Number(e.target.value) as 30 | 60 | 120 } })}>{[30, 60, 120].map(n => <option key={n} value={n}>{n} {t('detik', 'seconds')}</option>)}</select></label>}<p className="muted">{t('Kartu pemain offline tetap diperhitungkan.', 'Offline players’ cards still count.')}</p></section>}
       <div className="roster-actions">{isLobby && <button className="text-button" disabled={disabled || !playing && participants.length >= 4} onClick={() => action({ type: 'seat' })}>{playing ? t('Jadi penonton', 'Watch instead') : t('Ikut bermain', 'Take a seat')}</button>}<button className="text-button" disabled={disabled} onClick={() => confirmAction('leave')}>{t('Keluar room', 'Leave room')} <Icon name="arrow"/></button></div>
     </aside></details>
-    {confirmation && <ConfirmDialog title={confirmation.type === 'kick' ? t('Keluarkan ', 'Remove ') + selected.name + '?' : pendingLabel + '?'} message={confirmation.epoch !== room.epoch ? t('Kondisi meja sudah berubah. Tutup pesan ini dan periksa meja dulu.', 'The table has changed. Close this message and check the table first.') : confirmation.type === 'resume' ? t('Kartu pemain offline tetap dihitung. Tim bisa kehilangan nyawa meski mereka belum kembali.', 'Offline players’ cards still count. The team can lose lives before they return.') : interruptsGame(confirmation.type, selected.role, room.phase) ? t('Pertandingan ini akan dibatalkan. Pemain lain kembali ke lobi dan bisa mulai lagi.', 'This game will be cancelled. Everyone else returns to the lobby and can start again.') : confirmation.type === 'kick' ? t('Peserta ini akan dikeluarkan dari room. Permainan tetap berjalan.', 'This participant will leave the room. The game continues.') : confirmation.type === 'cancel' ? t('Semua peserta akan kembali ke lobi.', 'Everyone will return to the lobby.') : t('Kamu akan keluar dari room. Peserta lain tetap berada di meja.', 'You will leave the room. The others will stay at the table.')} confirmLabel={pendingLabel} cancelLabel={t('Batal', 'Cancel')} disabled={disabled || confirmation.epoch !== room.epoch} onClose={() => setConfirmation(null)} onConfirm={() => { action({ type: confirmation.type, target: confirmation.target }); setConfirmation(null); }}/>} 
+    {notice && playing && <ResultDialog
+      key={notice.id}
+      result={notice}
+      t={t}
+      isHost={host}
+      onLobby={() => action({ type: 'lobby' })}
+      onClose={closeResult}
+    />}
+    {confirmation && !notice && <ConfirmDialog
+      title={confirmation.type === 'kick' ? t('Keluarkan ', 'Remove ') + selected.name + '?' : pendingLabel + '?'}
+      message={confirmation.epoch !== room.epoch ? t('Kondisi meja sudah berubah. Tutup pesan ini dan periksa meja dulu.', 'The table has changed. Close this message and check the table first.') : confirmation.type === 'resume' ? t('Kartu pemain offline tetap dihitung. Tim bisa kehilangan nyawa meski mereka belum kembali.', 'Offline players’ cards still count. The team can lose lives before they return.') : interruptsGame(confirmation.type, selected.role, room.phase) ? t('Pertandingan ini akan dibatalkan. Pemain lain kembali ke lobi dan bisa mulai lagi.', 'This game will be cancelled. Everyone else returns to the lobby and can start again.') : confirmation.type === 'kick' ? t('Peserta ini akan dikeluarkan dari room. Permainan tetap berjalan.', 'This participant will leave the room. The game continues.') : confirmation.type === 'cancel' ? t('Semua peserta akan kembali ke lobi.', 'Everyone will return to the lobby.') : t('Kamu akan keluar dari room. Peserta lain tetap berada di meja.', 'You will leave the room. The others will stay at the table.')}
+      confirmLabel={pendingLabel}
+      cancelLabel={t('Batal', 'Cancel')}
+      disabled={disabled || confirmation.epoch !== room.epoch}
+      onClose={() => setConfirmation(null)}
+      onConfirm={() => { action({ type: confirmation.type, target: confirmation.target }); setConfirmation(null); }}
+    />}
   </main>;
 }
 const rootRoute = createRootRoute({ component: Shell });

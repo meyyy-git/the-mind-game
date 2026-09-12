@@ -14,7 +14,6 @@ function send(r: Room, id: string, data: Partial<Action> & Pick<Action, 'type'>)
 function table(n = 2) {
   const r = newRoom('ABCDEF');
   for (let i = 0; i < n; i++) connect(r, `secret${i}`, `Player ${i}`, Date.now() + i);
-  for (const p of players(r)) send(r, p.id, { type: 'ready' });
   send(r, r.host, { type: 'start' });
   for (const p of players(r)) send(r, p.id, { type: 'ready' });
   return r;
@@ -22,6 +21,39 @@ function table(n = 2) {
 function ready(r: Room) { for (const p of players(r).filter(m => m.online)) send(r, p.id, { type: 'ready' }); }
 
 describe('original rules and online state', () => {
+  test('host deals without lobby ready; ready can be cancelled only before activation', () => {
+    const r = newRoom('ABCDEF'); const a = connect(r, 'a', 'Alpha');
+    expect(() => send(r, a, { type: 'start' })).toThrow('notReady');
+    const b = connect(r, 'b', 'Bravo');
+    expect(() => send(r, b, { type: 'start' })).toThrow('hostOnly');
+    expect(() => send(r, a, { type: 'ready' })).toThrow('phase');
+    send(r, a, { type: 'start' }); expect(r.phase).toBe('ready'); expect(r.result).toBeNull();
+    send(r, a, { type: 'ready' }); expect(players(r)[0].ready).toBe(true);
+    send(r, a, { type: 'unready' }); expect(players(r)[0].ready).toBe(false);
+    send(r, b, { type: 'ready' }); expect(r.phase).toBe('ready');
+    send(r, a, { type: 'ready' }); expect(r.phase).toBe('active');
+    expect(() => send(r, a, { type: 'unready' })).toThrow('phase');
+  });
+  test('level result retains completed level and actual reward through readiness and restart', () => {
+    const r = table(); const [a,b] = players(r); r.level = 2; r.stars = 1; a.hand=[10]; b.hand=[20];
+    send(r,a.id,{type:'play',card:10}); const packet=send(r,b.id,{type:'play',card:20});
+    expect(r.level).toBe(3); expect(r.phase).toBe('ready');
+    expect(r.result).toMatchObject({kind:'level',level:2,lives:2,stars:2,reward:{lives:0,stars:1}});
+    expect(r.result?.mistakes).toBe(0); expect(r.result?.shurikensUsed).toBe(0);
+    const result=structuredClone(r.result); act(r,b.id,packet); expect(r.result).toEqual(result);
+    send(r,a.id,{type:'ready'}); expect(r.result).toEqual(result); expect(players(r)[1].ready).toBe(false);
+    recover(r); expect(r.result).toEqual(result); expect(view(r,a.id).result).toEqual(result);
+  });
+  test('nonfatal mistakes create one persistent popup result; capped rewards report zero', () => {
+    const r=table(); const [a,b]=players(r); a.hand=[20,80]; b.hand=[10,90];
+    const packet=send(r,a.id,{type:'play',card:20}); expect(r.reason).toBe('mistake');
+    expect(r.result).toMatchObject({kind:'mistake',lives:1,missedCards:[10]});
+    const result=structuredClone(r.result); act(r,a.id,packet); expect(r.result).toEqual(result); expect(r.lives).toBe(1);
+    ready(r); r.level=2; r.stars=3; a.hand=[30]; b.hand=[40];
+    send(r,a.id,{type:'play',card:30}); send(r,b.id,{type:'play',card:40});
+    expect(r.result?.reward.stars).toBe(0); expect(r.result?.stars).toBe(3);
+    expect(r.result?.shurikensUsed).toBe(0);
+  });
   for (const [n, target] of [[2, 12], [3, 10], [4, 8]]) test(`${n} players can complete all ${target} levels and rematch`, () => {
     const r = table(n); expect(r.lives).toBe(n); expect(r.stars).toBe(1); expect(r.target).toBe(target);
     let moves = 0;
@@ -33,18 +65,22 @@ describe('original rules and online state', () => {
       if (next) send(r, next.id, { type: 'play', card: next.hand[0] });
     }
     expect(r.reason).toBe('won'); expect(r.lives).toBe(5); expect(r.stars).toBe(3);
+    expect(r.result).toMatchObject({kind:'won',level:target});
     send(r, r.host, { type: 'lobby' }); expect(r.phase).toBe('lobby'); expect(players(r).length).toBe(n);
+    expect(r.result).toBeNull();
   });
   test('one mistake discards every lower hand card including offline players, costs one life', () => {
     const r = table(3); const [a, b, c] = players(r); a.hand = [34, 80]; b.hand = [26, 30, 90]; c.hand = [12, 35]; c.online = false;
     send(r, a.id, { type: 'play', card: 34 });
     expect(r.lives).toBe(2); expect(r.top).toBe(34); expect(r.revealed.sort((a,b)=>a-b)).toEqual([12,26,30]);
+    expect(view(r,b.id).result).toMatchObject({kind:'mistake',missedCards:[12,26,30],lives:2});
     expect(b.hand).toEqual([90]); expect(c.hand).toEqual([35]); expect(r.phase).toBe('ready');
     ready(r); expect(r.phase).toBe('active'); expect(r.revealed).toEqual([]);
   });
   test('last life lost takes priority over clearing the final hand', () => {
     const r = table(); const [a, b] = players(r); a.hand = [50]; b.hand = [10]; r.lives = 1;
     send(r, a.id, { type: 'play', card: 50 }); expect(r.phase).toBe('finished'); expect(r.reason).toBe('lost'); expect(r.level).toBe(1);
+    expect(r.result).toMatchObject({kind:'lost',level:1,lives:0,reward:{lives:0,stars:0}});
   });
   test('mistake and shuriken reveal remain visible before moving to the next level', () => {
     const r = table(); const [a,b] = players(r); a.hand=[20]; b.hand=[10];

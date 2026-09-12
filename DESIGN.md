@@ -140,6 +140,10 @@ Controls use 10–12px corners; menus and dialogs use 16px corners. Player token
 
 ## Components
 
+Result notifications use a native dialog with the completed/failed level, actual reward, and remaining inventory. Dismissal is personal and never sets readiness. The result enters once over 240ms; the lives display reacts over 220ms. Reduced motion disables both. Lobby uses “Bagikan kartu”; after dealing, “Aku siap” changes to “Batal siap” until activation.
+
+The table stats include a compact level progress rail. Completed levels use gold, the current level uses mint, and upcoming levels stay muted. Result dialogs distinguish level completion, card mistakes, wins, and losses; card mistakes list the missed cards and the lost life.
+
 ### Buttons
 
 Primary and secondary actions have a minimum height of 50px, 13px 24px padding, 12px corners, and 15px semibold labels. Primary hover is `#efdab0`; secondary hover is `#3a2e48`. Pressing either applies `brightness(.9)`. Disabled buttons normally use .48 opacity. A disabled ready button retains full opacity, mint text, and a `#719b89` border. Text actions are transparent, at least 44px high, and turn gold on hover; icon controls are 44px squares.

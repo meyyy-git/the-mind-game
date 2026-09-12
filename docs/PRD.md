@@ -68,13 +68,13 @@ Hadiah tidak melampaui batas inventori dan hanya diberikan pada level yang dimai
 1. Pengguna membuka aplikasi atau tautan room dan memasukkan username.
 2. Pengguna membuat room atau bergabung melalui kode/tautan.
 3. Host menjadi pemain pertama. Peserta berikutnya mengisi kursi kosong di lobi; jika penuh atau permainan berjalan, masuk sebagai penonton.
-4. Host memilih pengaturan room. Permainan dapat dimulai dengan 2–4 pemain siap.
+4. Host memilih pengaturan room lalu menekan “Bagikan kartu” ketika 2–4 pemain terhubung. Tidak ada kesiapan di lobi.
 5. Server membagikan kartu. Semua pemain online menekan “Siap” sebelum level aktif.
 6. Pemain memainkan kartu; server memvalidasi dan mengirim hasil yang sesuai untuk setiap peserta.
 7. Kesalahan, voting, atau gangguan koneksi mengikuti aturan jeda masing-masing.
-8. Level berikutnya dimulai setelah kesiapan bersama. Menang/kalah menampilkan hasil dan memungkinkan kembali ke lobi untuk bermain ulang.
+8. Popup muncul saat lolos level, menang, atau kalah. Setiap peserta menutup popup sendiri. Setelah lolos level, pemain melihat kartu baru lalu menyatakan siap; setelah menang/kalah, host dapat kembali ke lobi.
 
-**Usulan:** kesiapan lobi untuk menyetujui komposisi pemain dibedakan dari kesiapan level setelah melihat kartu. Host memulai pertandingan; level aktif otomatis saat syarat siap terpenuhi, tanpa hitung mundur.
+**Disepakati dalam revisi workflow:** kesiapan hanya dilakukan setelah melihat kartu. Host membagikan kartu dari lobi; level aktif otomatis saat semua pemain online siap, tanpa hitung mundur. “Batal siap” tersedia hanya selama masih menunggu.
 
 ### 2.4 User Stories dan Acceptance Criteria
 
@@ -124,6 +124,7 @@ Sebagai pemain, saya ingin mengetahui kapan permainan aktif agar semua peserta m
 - **Disepakati:** awal level dan kelanjutan permainan memerlukan “Siap” dari semua pemain online.
 - Permainan aktif segera setelah syarat siap terpenuhi, tanpa countdown.
 - Setiap jeda baru mereset kesiapan; klik siap dari fase sebelumnya tidak berlaku untuk fase baru.
+- Pemain dapat membatalkan kesiapan selama fase kesiapan. Setelah level aktif, server menolak pembatalan tersebut.
 - Tidak tersedia tombol “Fokus ulang” yang dapat digunakan pemain sewaktu-waktu.
 - Host dapat meminta unpause untuk jeda koneksi, termasuk ketika pemain masih offline, setelah peringatan risiko.
 - Permintaan unpause tetap menuju fase kesiapan; bukan melewati kesiapan pemain online.
@@ -139,6 +140,10 @@ Sebagai pemain, saya ingin kesalahan dijelaskan bersama agar memahami kehilangan
 - Kartu pemicu tetap menjadi kartu teratas; kartu yang dibuang tidak menggantikannya.
 - Setelah resolusi, pemain online menekan “Siap”; level tidak dimulai ulang.
 - Jika nyawa habis, hasilnya kalah dan tidak meminta siap untuk melanjutkan.
+- Revisi terbaru: kesalahan urutan kartu juga membuka popup pribadi berisi kartu terlewat dan sisa nyawa. Jika nyawa habis, tampilkan popup kalah saja. Setelah kesalahan nonfatal, pemain menutup popup lalu menekan “Siap”.
+- Popup hasil mencatat level yang selesai/gagal, sisa nyawa/shuriken, dan hadiah yang benar-benar ditambahkan (tanpa hadiah palsu ketika inventori penuh).
+- Popup menang/kalah juga menampilkan ringkasan pertandingan: jumlah kesalahan dan jumlah shuriken yang dipakai.
+- Popup ditutup per peserta. Menutupnya tidak menutup popup peserta lain dan tidak otomatis menandai siap. Keputusan penutupan disimpan di browser; hasil terakhir disimpan di room untuk reconnect.
 - **Usulan:** setelah resolusi kesalahan atau shuriken, jika semua tangan kosong dan nyawa masih ada, level selesai; hadiah diberikan sekali sebelum transisi berikutnya.
 - **Usulan:** bila aksi terakhir sekaligus menghabiskan nyawa, kekalahan didahulukan dari penyelesaian level atau hadiah.
 
@@ -198,7 +203,7 @@ Sebagai penonton, saya ingin melihat permainan dan mengikuti pertandingan beriku
 - Penonton tidak dapat memainkan kartu, menekan siap sebagai pemain, melakukan voting, atau memegang kendali host otomatis.
 - Setelah menang/kalah, tersedia kembali ke lobi dan bermain ulang dalam room yang sama.
 - Penonton dapat menjadi pemain pada permainan berikutnya jika tersedia kursi.
-- Host memulai pertandingan berikutnya dengan 2–4 pemain siap.
+- Host membagikan kartu untuk pertandingan berikutnya dengan 2–4 pemain terhubung, tanpa kesiapan di lobi.
 - **Usulan:** kursi pemain lama tetap dipertahankan di lobi; penonton mengambil kursi yang tersedia melalui aksi “Ikut bermain”.
 
 #### US-10 — Pemulihan dan kedaluwarsa
@@ -234,8 +239,8 @@ Model berikut adalah **usulan implementasi** untuk memenuhi keputusan produk, bu
 
 | State | Aksi utama | Transisi |
 |---|---|---|
-| Lobi | Bergabung, pengaturan, kesiapan, mulai | Kesiapan level |
-| Kesiapan | Pemain online menyatakan siap | Aktif bila syarat terpenuhi |
+| Lobi | Bergabung, pengaturan, host membagikan kartu | Kesiapan level |
+| Kesiapan | Pemain online menyatakan atau membatalkan siap; menutup popup hasil secara pribadi | Aktif bila semua pemain online siap |
 | Aktif | Main kartu, usul shuriken | Kesalahan, voting, jeda koneksi, selesai level/pertandingan |
 | Voting shuriken | Setuju/tolak | Resolusi lalu kesiapan; offline tidak menghilangkan kewajiban voting |
 | Resolusi kesalahan | Tampilkan hasil server | Kesiapan, selesai level, atau kalah |
@@ -256,7 +261,7 @@ Disconnect tidak boleh menghapus konteks voting. Jika jeda koneksi terjadi saat 
 - Riwayat kartu tidak tersedia; tampilan standar hanya menunjukkan kartu teratas.
 - Aturan kartu, nyawa, hadiah, dan target level tetap baku.
 
-**Terbuka — Blind Mode:** buku aturan original menyebut tantangan lanjutan setelah menang: mulai kembali dari level pertama dengan inventori tersisa, kartu dimainkan tertutup, lalu diperiksa di akhir level. Fitur ini belum dibahas dalam wawancara dan memerlukan keputusan karena berbeda dari alur kembali ke lobi serta tampilan kartu teratas yang telah disepakati. Jangan mengklaim adaptasi seluruh materi original selesai sebelum cakupan ini diputuskan. Acuan: [buku aturan original, halaman kedua](https://www.brettspiele-report.de/images/t/the-mind/The-Mind-Spielanleitung.pdf).
+**Keputusan Blind Mode:** jadikan tantangan opsional setelah menang, default tidak aktif. Host mendapat tombol “Mulai Blind Mode” dari hasil kemenangan; jika dipilih, tim memulai lagi dari level 1 memakai nyawa/shuriken tersisa, kartu dimainkan tertutup, lalu urutan diperiksa saat level selesai. Mode ini terpisah dari rematch normal dan tidak mengubah aturan normal. Implementasi engine Blind Mode masih menjadi pekerjaan lanjutan karena membutuhkan state kartu tertutup dan evaluasi urutan akhir level. Acuan: [aturan original, halaman kedua](https://www.brettspiele-report.de/images/t/the-mind/The-Mind-Spielanleitung.pdf).
 
 ### 2.7 Non-Goals
 
@@ -398,7 +403,7 @@ Tahapan berikut adalah urutan pengerjaan yang diusulkan, bukan pengurangan fitur
 
 ### 5.3 Keputusan Terbuka sebelum Bagian Terkait Diimplementasikan
 
-1. **Blind Mode original:** masuk versi pertama atau penundaan eksplisit; jika masuk, tetapkan alur hasil menang, evaluasi kesalahan, dan batas tantangannya.
+1. **Blind Mode original:** desain sudah diputuskan sebagai tantangan opsional setelah menang; implementasi engine belum dikerjakan.
 2. **Identitas dan kapasitas:** panjang/karakter username serta batas penonton dan room berdasarkan kemampuan VPS.
 3. **Reconnect selama masa tenggang:** apakah kedatangan kembali selalu memicu kesiapan bersama; rekomendasi ya.
 4. **Keluar permanen:** rekomendasi membatalkan pertandingan dan kembali ke lobi, sejajar dengan mengeluarkan pemain; belum disepakati.

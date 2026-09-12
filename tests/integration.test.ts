@@ -22,8 +22,10 @@ test('real sockets: create, join, private views, replacement and return to lobby
       const r=app.store.rooms.get(code)!;
       return emit(s,'action',{type,id:randomUUID(),epoch:r.epoch,gameId:r.gameId,...rest});
     }
-    for(const c of [a,b]) expect((await command(c.s,'ready')).ok).toBe(true);
     expect((await command(a.s,'start')).ok).toBe(true);
+    expect((await command(a.s,'ready')).ok).toBe(true);
+    expect((await command(a.s,'unready')).ok).toBe(true);
+    expect(app.store.rooms.get(code)!.phase).toBe('ready');
     for(const c of [a,b]) expect((await command(c.s,'ready')).ok).toBe(true);
     const watcher=await client(); watcher.s.on('state',(v:RoomView)=>states.set(watcher.s,v));
     expect((await emit(watcher.s,'enter',{code,name:'Watcher'})).ok).toBe(true);
@@ -34,6 +36,17 @@ test('real sockets: create, join, private views, replacement and return to lobby
     const newer=await client(a.token); expect((await emit(newer.s,'enter',{code,name:'Alpha'})).ok).toBe(true);
     expect(await replaced).toBe('replaced'); expect(a.s.connected).toBe(false);
     expect(app.store.rooms.get(code)!.members.find(m=>m.id===oldState.self)!.online).toBe(true);
+    const levelResult = new Promise<RoomView>(resolve => {
+      newer.s.on('state', function resultState(v: RoomView) {
+        if (v.result?.kind === 'level') { newer.s.off('state', resultState); resolve(v); }
+      });
+    });
+    const ordered = app.store.rooms.get(code)!.members.filter(m=>m.role==='player').sort((x,y)=>x.hand[0]-y.hand[0]);
+    for (const m of ordered) expect((await command(m.id === oldState.self ? newer.s : b.s, 'play', {card:m.hand[0]})).ok).toBe(true);
+    const delivered = await levelResult;
+    expect(delivered.result).toMatchObject({kind:'level',level:1});
+    expect(delivered.phase).toBe('ready'); expect(delivered.hand.length).toBe(2);
+    expect(delivered.members.every(m=>!('hand' in m) && !('secret' in m))).toBe(true);
     expect((await fetch(`http://127.0.0.1:${port}/health`)).status).toBe(200);
     expect((await command(newer.s,'cancel')).ok).toBe(true); expect(app.store.rooms.get(code)!.phase).toBe('lobby');
   } finally { for(const s of clients) s.disconnect(); await app.close(); }

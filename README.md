@@ -74,8 +74,12 @@ Backup bukan pengganti volume: gunakan snapshot SQLite konsisten atau hentikan a
 - Jika seluruh pemain offline, host diberikan kepada pemain pertama yang kembali. Penonton tidak memperoleh kendali otomatis.
 - Crash tanpa disconnect memakai liveness terakhir (disimpan setiap 15 detik) sebagai acuan expiry. Room berakhir 24 jam setelah pemain terakhir keluar; penonton tidak memperpanjangnya.
 - Kartu yang dibuang saat kesalahan/shuriken tetap terlihat sampai semua siap, termasuk bila pengosongan itu menyelesaikan level.
+- Host langsung “Bagikan kartu” dari lobi. Pemain menekan “Siap” setelah melihat kartu dan dapat memilih “Batal siap” selama permainan belum aktif.
+- Lolos level, menang, kalah, dan kesalahan urutan kartu membuka popup pribadi. “Lanjut” menutup popup tanpa menandai siap; hadiah dan inventori diambil dari snapshot hasil server. Kesalahan menampilkan kartu terlewat serta sisa nyawa; jika nyawa habis, hanya popup kalah yang muncul.
+- Popup menang/kalah menampilkan ringkasan: level terakhir, jumlah kesalahan, shuriken terpakai, dan inventori tersisa.
+- Meja menampilkan rail progres level: level selesai berwarna gold, level aktif berwarna mint, dan level berikutnya redup.
 - Batas awal 100 room dan 12 penonton dapat disesuaikan setelah mengukur VPS. Pembatasan pembuatan/koneksi berbasis alamat transport; di balik proxy dapat terhitung bersama, tidak mempercayai header IP kiriman klien.
-- **Blind Mode belum diimplementasikan** karena masih merupakan keputusan terbuka di PRD. Mode standar original dan penyesuaian online yang disepakati tersedia.
+- **Blind Mode sudah ditentukan sebagai tantangan opsional setelah menang, default off.** Host akan memulainya dari popup kemenangan. Engine kartu tertutup dan evaluasi akhir level belum diimplementasikan; mode normal tetap menjadi jalur utama.
 
 ## Status verifikasi lingkungan ini
 
