@@ -7,7 +7,7 @@
   font-family: 'Segoe UI', system-ui, sans-serif; background: var(--ink); color: var(--text); font-synthesis: none;
 }
 * { box-sizing: border-box; }
-html, body { overflow-x: clip; }
+html, body { overflow-x: hidden; }
 body { margin: 0; min-width: 320px; background: var(--ink); }
 body::before { content: ''; position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 0%,#31274370,transparent 66%); z-index: -1; }
 button,input,select { font: inherit; }
@@ -31,7 +31,7 @@ input { caret-color: var(--gold); }
 .brand-dot { color: var(--gold); }
 .header nav { display: flex; align-items: center; gap: 12px; }
 .language-picker { position: relative; display: inline-flex; align-items: center; }
-.language-picker::after { content: '⌄'; position: absolute; right: 10px; top: 50%; transform: translateY(-55%); pointer-events: none; color: var(--muted); font-size: 13px; }
+.language-chevron { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--muted); pointer-events: none; }
 .header select { appearance: none; width: 68px; min-height: 44px; padding: 8px 28px 8px 12px; border: 1px solid #62506f; border-radius: 10px; background: #241d31; color: var(--text); font-size: 12px; font-weight: 600; letter-spacing: .06em; cursor: pointer; }
 .header select:hover { border-color: var(--gold); background: #352940; }.header select:focus-visible { border-color: var(--mint); outline: 2px solid var(--mint); }
 .header select option { background: var(--panel); color: var(--text); }
@@ -192,7 +192,7 @@ footer .text-button { font-size: 12px; }
 @keyframes inventory-change { from { transform: scale(1.12); } to { transform: scale(1); } }
 @keyframes card-landed { 0% { transform: translateY(-10px) scale(1.04); } 65% { transform: translateY(2px) scale(.98); } 100% { transform: translateY(0) scale(1); } }
 @media (max-width: 760px) {
-  .shell { padding: 0 18px; }.header { min-height: 70px; }.brand { font-size: 23px; gap: 7px; }.brand>svg { width: 29px; }.header nav { gap: 7px; }.guide-link { width: 38px; }.guide-link>span { display: none; }.header select { width: 60px; padding: 8px 25px 8px 9px; }.language-picker::after { right: 8px; }.icon-button { width: 40px; height: 44px; }
+  .shell { padding: 0 18px; }.header { min-height: 70px; }.brand { font-size: 23px; gap: 7px; }.brand>svg { width: 29px; }.header nav { gap: 7px; }.guide-link { width: 38px; }.guide-link>span { display: none; }.header select { width: 60px; padding: 8px 25px 8px 9px; }.language-chevron { right: 8px; }.icon-button { width: 40px; height: 44px; }
   .title-screen { padding: 12px 0 30px; }.title-emblem { width: 88px; height: 64px; margin-bottom: 20px; }.title-emblem>svg { width: 58px; }.emblem-ring { width: 62px; height: 62px; }.game-title { font-size: clamp(52px,12vw,76px); margin-bottom: 15px; }.title-description { max-width: 320px; font-size: 14px; margin-bottom: 22px; }.game-menu { max-width: 380px; padding: 20px; }.menu-deck { display: none; }.menu-facts { margin-top: 20px; font-size: 12px; }
   footer { font-size: 11px; }footer .text-button { font-size: 12px; }.join-page { padding: 26px 0; }
   .room-toolbar { margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }.room-toolbar>div { flex: 1; justify-content: space-between; gap: 10px; }.connection-label { font-size: 11px; }.room-code { font-size: 14px; }

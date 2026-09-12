@@ -152,7 +152,7 @@ function Shell() {
     <header className="header"><Link to="/" className="brand" aria-label="The Minds"><Eye/><span>the minds<span className="brand-dot">.</span></span></Link>
       <nav aria-label={t('Pengaturan', 'Settings')}><button className="text-button guide-link" onClick={() => setGuide(true)} aria-label={t('Cara bermain', 'How to play')}><Icon name="help"/><span>{t('Cara bermain', 'How to play')}</span></button>
         <button className="icon-button" aria-label={muted ? t('Aktifkan suara', 'Enable sound') : t('Bisukan suara', 'Mute sound')} aria-pressed={muted} onClick={toggleMute}><Icon name={muted ? 'mute' : 'sound'}/></button>
-        <label className="language-picker"><span className="sr-only">{t('Bahasa', 'Language')}</span><select aria-label={t('Bahasa', 'Language')} value={lang} onChange={e => setLang(e.target.value as Language)}><option value="id">ID</option><option value="en">EN</option></select></label>
+        <label className="language-picker"><span className="sr-only">{t('Bahasa', 'Language')}</span><select aria-label={t('Bahasa', 'Language')} value={lang} onChange={e => setLang(e.target.value as Language)}><option value="id">ID</option><option value="en">EN</option></select><Icon name="chevronDown" className="language-chevron"/></label>
       </nav>
     </header>
     {message && (!error || fatal || !(typeof window !== 'undefined' && window.location.pathname.startsWith('/room/'))) && <div className="alert" role="alert">{t(...message)} {fatal && <a href="/">{t('Kembali ke awal', 'Back to home')} →</a>}</div>}

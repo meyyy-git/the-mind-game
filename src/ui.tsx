@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { GameResult } from '../shared/types';
 
-export function Icon({ name, className = '' }: { name: 'arrow' | 'copy' | 'check' | 'close' | 'sound' | 'mute' | 'help' | 'star' | 'heart' | 'plus' | 'eye' | 'eyeOff'; className?: string }) {
+export function Icon({ name, className = '' }: { name: 'arrow' | 'copy' | 'check' | 'close' | 'sound' | 'mute' | 'help' | 'star' | 'heart' | 'plus' | 'eye' | 'eyeOff' | 'chevronDown'; className?: string }) {
   const paths = {
     arrow: <path d="M4 12h15m-6-6 6 6-6 6"/>,
     copy: <><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M15 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3"/></>,
@@ -15,6 +15,7 @@ export function Icon({ name, className = '' }: { name: 'arrow' | 'copy' | 'check
     plus: <path d="M12 5v14M5 12h14"/>,
     eye: <><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></>,
     eyeOff: <><path d="m3 3 18 18M10 5h2c7 0 10 7 10 7a19 19 0 0 1-3 4M6 6a20 20 0 0 0-4 6s3 7 10 7c2 0 4-.6 5-1.5M10 10a3 3 0 0 0 4 4"/></>,
+    chevronDown: <path d="m6 9 6 6 6-6"/>,
   };
   return <svg className={`ui-icon ${className}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 }
