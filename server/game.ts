@@ -36,7 +36,8 @@ export function connect(r: Room, secret: string, rawName: unknown, now = Date.no
     const wasOffline = !member.online;
     member.online = true; member.deadline = null;
     if (wasOffline && member.role === 'player') {
-      if (r.phase === 'active' || r.phase === 'ready') transition(r, 'ready', 'reconnect');
+      if (r.phase === 'active') transition(r, 'ready', 'reconnect');
+      else if (r.phase === 'ready') transition(r, 'ready', r.reason === 'mistake' ? 'mistake' : 'reconnect');
       if (r.phase === 'paused' && players(r).every(m => m.online)) transition(r, 'ready', 'reconnect');
     }
   } else {
@@ -118,7 +119,7 @@ export function act(r: Room, memberId: string, a: Action, now = Date.now()) {
     case 'ready':
       isPlayer(); requireThat(r.phase === 'ready', 'phase'); m.ready = true;
       if (r.phase === 'ready' && players(r).filter(m => m.online).every(m => m.ready)) {
-        const retrySameLevel = r.reason === 'mistake' && r.lives > 0 && players(r).every(p => p.hand.length === 0);
+        const retrySameLevel = r.reason === 'mistake' && r.lives > 0;
         if (retrySameLevel) deal(r);
         else { transition(r, 'active'); r.revealed = []; event(r, 'active'); }
       }

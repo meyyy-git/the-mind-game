@@ -49,14 +49,14 @@ describe('original rules and online state', () => {
     const packet=send(r,a.id,{type:'play',card:20}); expect(r.reason).toBe('mistake');
     expect(r.result).toMatchObject({kind:'mistake',lives:1,missedCards:[10]});
     const result=structuredClone(r.result); act(r,a.id,packet); expect(r.result).toEqual(result); expect(r.lives).toBe(1);
-    ready(r); r.level=2; r.stars=3; a.hand=[30]; b.hand=[40];
+    ready(r); ready(r); r.level=2; r.stars=3; a.hand=[30]; b.hand=[40];
     send(r,a.id,{type:'play',card:30}); send(r,b.id,{type:'play',card:40});
     expect(r.result?.reward.stars).toBe(0); expect(r.result?.stars).toBe(3);
     expect(r.result?.shurikensUsed).toBe(0);
   });
-  test('a mistake never advances the level; if it empties every hand, the same level is dealt again', () => {
+  test('a mistake never advances the level; the same level is always dealt again', () => {
     const r = table(); const [a, b] = players(r);
-    r.level = 3; a.hand = [20]; b.hand = [10];
+    r.level = 3; a.hand = [20, 90, 95]; b.hand = [10, 80, 99];
     send(r, a.id, { type: 'play', card: 20 });
     expect(r.level).toBe(3); expect(r.lives).toBe(1); expect(r.reason).toBe('mistake');
     ready(r);
@@ -85,7 +85,8 @@ describe('original rules and online state', () => {
     expect(r.lives).toBe(2); expect(r.top).toBe(34); expect(r.revealed.sort((a,b)=>a-b)).toEqual([12,26,30]);
     expect(view(r,b.id).result).toMatchObject({kind:'mistake',missedCards:[12,26,30],lives:2});
     expect(b.hand).toEqual([90]); expect(c.hand).toEqual([35]); expect(r.phase).toBe('ready');
-    ready(r); expect(r.phase).toBe('active'); expect(r.revealed).toEqual([]);
+    ready(r); expect(r.phase).toBe('ready'); expect(r.revealed).toEqual([]); expect(b.hand).toHaveLength(1);
+    ready(r); expect(r.phase).toBe('active');
   });
   test('last life lost takes priority over clearing the final hand', () => {
     const r = table(); const [a, b] = players(r); a.hand = [50]; b.hand = [10]; r.lives = 1;
