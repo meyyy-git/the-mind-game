@@ -119,24 +119,28 @@ The title uses the frontmatter display role; table messages use the headline rol
 
 ## Layout
 
-The shell is centered at a maximum 1320px with 40px side padding. The title area caps at 1000px, its menu at 400px, and room content at 1080px. Four player columns cap at 780px above the table; the first and fourth tokens sit 27px lower. The played card occupies the center, followed by phase actions and a private hand that wraps within 870px. Room controls follow in a native `details` element. The roster uses two columns.
+The shell is centered at a maximum 1320px with 40px side padding. The title area caps at 1000px and its menu at 400px. The room caps at 960px and splits into two zones: the **table** shows shared state (seats, HUD, center pile, phase message, missed cards, vote status) and the **tray** holds what belongs to the viewer (private hand and their next action). The tray is sticky at the bottom so the hand and the Ready/vote buttons stay in reach. Room management follows in a native `details` element; its roster uses two columns.
 
-At `max-width: 760px`, shell padding becomes 18px, menu width caps at 380px, decorative menu cards disappear, and the roster becomes one column. The four player columns remain, with smaller tokens and wrapped names. The title becomes `clamp(52px,12vw,76px)`, the played card 101×138px, and hand cards 58×84px. The document body has a 320px minimum width. Guide text in the header becomes icon-only with its accessible label retained; dialog actions stack in reverse column order.
+Seats: the lobby shows four seats, empty ones act as invite buttons. After dealing only real players are shown. The HUD shows level with a progress rail, lives as hearts, and shuriken as stars. Each state has one primary action: copy invite (fewer than two players), deal (host), ready, vote, resume (host), or back to lobby (host).
+
+The hand never wraps: from the third card on, cards overlap only as much as the row needs (`--n` card count, `--w` card width), keeping each corner index visible. Above five cards, covered cards hide their center number.
+
+At `max-width: 760px`, shell padding becomes 16px, decorative menu cards disappear, the roster becomes one column, the tray spans edge to edge, the connection label becomes a dot, and hand cards are 52px wide. Dialog actions stack in reverse column order.
 
 ## Elevation & Depth
 
-Tonal layering, an outlined oval table, and small object shadows establish depth. The title emblem and decorative cards are static. The table's outline sits inside its broad border; card shadows separate physical game pieces from the surface.
+Tonal layering, a felt table with an inset rim, and small object shadows establish depth.
 
 - Primary action: `0 4px 14px #08061155`.
-- Table: `0 20px 50px #0004`.
-- Played card: `0 9px 18px #09061266`.
-- Private card: `0 5px 9px #0005`.
+- Table and menu: `0 24px 60px #05030b80`.
+- Played card: `0 10px 22px #09061270`.
+- Tray: `0 -16px 36px #05030b99`.
 
-The played card arrives over .18s with `ease-out`. Private-card hover transforms take .14s; button background feedback takes .16s. Reduced-motion preference removes animations and transitions. No looping animation signals when to play.
+The played card lands over 280ms; a new hand deals in with a 45ms stagger; lives and shuriken pulse once when they change. Reduced-motion preference removes these. No looping animation signals when to play.
 
 ## Shapes
 
-Controls use 10–12px corners; menus and dialogs use 16px corners. Player tokens are upright 54×60px rounded rectangles with 18px corners. The table has a 180px radius, reduced to 90px on mobile. Eye rings and connection dots are circular; card ornaments combine circles and rotated squares. Dashed token outlines identify empty seats.
+One scale: cards 10px, controls and chips 12px, surfaces (menu, table, tray, dialogs) 20px. Seat tokens are 52x58px with 14px corners; the viewer's own token has a double ring. Dashed outlines identify empty seats and offline players.
 
 ## Components
 
