@@ -50,7 +50,7 @@ describe('original rules and online state', () => {
     expect(r.result).toMatchObject({kind:'mistake',lives:1,missedCards:[10]});
     const result=structuredClone(r.result); act(r,a.id,packet); expect(r.result).toEqual(result); expect(r.lives).toBe(1);
     ready(r); r.level=2; r.stars=3; a.hand=[30]; b.hand=[40];
-    send(r,a.id,{type:'play',card:30}); send(r,b.id,{type:'play',card:40});
+    send(r,a.id,{type:'play',card:30}); expect(view(r,b.id).topBy).toBe(a.id); send(r,b.id,{type:'play',card:40});
     expect(r.result?.reward.stars).toBe(0); expect(r.result?.stars).toBe(3);
     expect(r.result?.shurikensUsed).toBe(0);
   });
@@ -81,6 +81,7 @@ describe('original rules and online state', () => {
   test('one mistake discards every lower hand card including offline players, costs one life', () => {
     const r = table(3); const [a, b, c] = players(r); a.hand = [34, 80]; b.hand = [26, 30, 90]; c.hand = [12, 35]; c.online = false;
     send(r, a.id, { type: 'play', card: 34 });
+    expect(r.topBy).toBeNull(); // the mistake redeal clears the pile
     expect(r.lives).toBe(2); expect(r.revealed).toEqual([12,26,30]);
     expect(view(r,b.id).result).toMatchObject({kind:'mistake',missedCards:[12,26,30],lives:2});
     expect(b.hand).toHaveLength(1); expect(c.hand).toHaveLength(1); expect(r.phase).toBe('ready');

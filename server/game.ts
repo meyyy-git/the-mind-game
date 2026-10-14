@@ -20,7 +20,7 @@ export function transition(r: Room, phase: Phase, reason: Reason = r.reason) {
   for (const m of r.members) m.ready = false;
 }
 export function newRoom(code: string, now = Date.now()): Room {
-  return { code, host: '', members: [], settings: { disconnect: 'pause', timeout: 60 }, phase: 'lobby', reason: 'welcome', epoch: 0, revision: 0, gameId: '', level: 0, target: 0, lives: 0, stars: 0, mistakes: 0, shurikensUsed: 0, top: null, votes: [], revealed: [], expiresAt: now + DAY, lastSeen: now, receipts: [], result: null, event: { id: randomUUID(), kind: 'welcome' } };
+  return { code, host: '', members: [], settings: { disconnect: 'pause', timeout: 60 }, phase: 'lobby', reason: 'welcome', epoch: 0, revision: 0, gameId: '', level: 0, target: 0, lives: 0, stars: 0, mistakes: 0, shurikensUsed: 0, top: null, topBy: null, votes: [], revealed: [], expiresAt: now + DAY, lastSeen: now, receipts: [], result: null, event: { id: randomUUID(), kind: 'welcome' } };
 }
 export function event(r: Room, kind: string) { r.event = { id: randomUUID(), kind }; }
 export function syncPresence(r: Room, now: number) {
@@ -70,7 +70,7 @@ export function tick(r: Room, now: number) {
 }
 export function recover(r: Room, now = Date.now()) {
   r.mistakes ??= 0; r.shurikensUsed ??= 0;
-  r.result ??= null; // Snapshots created before result notifications remain readable.
+  r.result ??= null; r.topBy ??= null; // Snapshots created before result notifications remain readable.
   r.expiresAt ??= r.lastSeen + DAY;
   for (const m of r.members) { m.online = false; m.ready = false; m.deadline = null; }
   r.host = '';
@@ -83,7 +83,7 @@ function deal(r: Room) {
   const deck = Array.from({ length: 100 }, (_, i) => i + 1);
   for (let i = deck.length - 1; i > 0; i--) { const j = randomInt(i + 1); [deck[i], deck[j]] = [deck[j], deck[i]]; }
   for (const m of players(r)) m.hand = deck.splice(0, r.level).sort((a, b) => a - b);
-  r.top = null; r.revealed = []; r.votes = [];
+  r.top = null; r.topBy = null; r.revealed = []; r.votes = [];
   transition(r, 'ready', 'level'); event(r, 'level');
 }
 function finishLevel(r: Room) {
@@ -101,7 +101,7 @@ function finishLevel(r: Room) {
 }
 function lobby(r: Room, reason: Reason) {
   r.result = null;
-  transition(r, 'lobby', reason); r.gameId = ''; r.level = 0; r.target = 0; r.top = null; r.votes = []; r.revealed = [];
+  transition(r, 'lobby', reason); r.gameId = ''; r.level = 0; r.target = 0; r.top = null; r.topBy = null; r.votes = []; r.revealed = [];
   for (const m of r.members) { m.hand = []; m.deadline = null; }
 }
 export function act(r: Room, memberId: string, a: Action, now = Date.now()) {
@@ -130,7 +130,7 @@ export function act(r: Room, memberId: string, a: Action, now = Date.now()) {
       r.lives = players(r).length; r.stars = 1; r.mistakes = 0; r.shurikensUsed = 0; deal(r); break;
     case 'play': {
       isPlayer(); requireThat(r.phase === 'active', 'phase'); requireThat(m.hand.length && m.hand[0] === a.card, 'card');
-      const card = m.hand.shift()!; r.top = card; r.revealed = [];
+      const card = m.hand.shift()!; r.top = card; r.topBy = m.id; r.revealed = [];
       for (const p of players(r)) {
         r.revealed.push(...p.hand.filter(c => c < card)); p.hand = p.hand.filter(c => c > card);
       }

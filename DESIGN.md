@@ -1,180 +1,74 @@
 ---
 name: The Minds
-description: Dark, mysterious cooperative card game with a purple tabletop and gold actions.
+description: A quiet table at night. Cards carry heat from cool teal (1) to warm ember (100).
 colors:
-  ink: "#12111b"
-  panel: "#211e30"
-  line: "#514664"
-  text: "#eee9f2"
-  muted: "#b9b1c8"
-  gold: "#e3c78e"
-  gold-dark: "#392919"
-  mint: "#a5d5c1"
-  card: "#eee5d3"
-  rose: "#e5a6b7"
+  bg: "#0b0d13"
+  bg-2: "#10131b"
+  surface: "#151924"
+  surface-2: "#1c2130"
+  line: "#262c3b"
+  line-2: "#363e52"
+  text: "#eceff5"
+  muted: "#9aa3b6"
+  ember: "#f39a5b"
+  ember-ink: "#1f1107"
+  cool: "#62c7c1"
+  danger: "#f07b74"
+  card-cool: "#6ccfc7"
+  card-warm: "#f38a5a"
+  card-ink: "#0f121a"
 typography:
   display:
-    fontFamily: "Grenze, Georgia, serif"
-    fontSize: "clamp(62px,7vw,96px)"
-    fontWeight: 500
-    lineHeight: 0.95
-    letterSpacing: ".035em"
-  headline:
-    fontFamily: "Grenze, Georgia, serif"
-    fontSize: "34px"
-    fontWeight: 500
-    lineHeight: 1.15
+    fontFamily: "Bricolage Grotesque Variable (wdth 75-85%), system-ui"
+    weight: 700-800
   body:
-    fontFamily: "'Segoe UI', system-ui, sans-serif"
-  label:
-    fontFamily: "'Segoe UI', system-ui, sans-serif"
-    fontSize: "12px"
-    fontWeight: 500
-    lineHeight: 1.5
-    letterSpacing: ".06em"
+    fontFamily: "Geist Variable, system-ui"
 rounded:
-  vote: "8px"
-  field: "10px"
-  action: "12px"
-  panel: "16px"
-  player: "18px"
-spacing:
-  hand-gap: "8px"
-  action-gap: "12px"
-  field-bottom: "20px"
-  menu-padding: "24px 28px"
-components:
-  button-primary:
-    backgroundColor: "{colors.gold}"
-    textColor: "{colors.gold-dark}"
-    rounded: "{rounded.action}"
-    padding: "13px 24px"
-  button-secondary:
-    backgroundColor: "#292337"
-    textColor: "{colors.text}"
-    rounded: "{rounded.action}"
-    padding: "13px 24px"
-  button-text:
-    backgroundColor: "transparent"
-    textColor: "{colors.muted}"
-    padding: "10px 0"
-  button-icon:
-    backgroundColor: "#211c2c"
-    textColor: "{colors.text}"
-    rounded: "{rounded.action}"
-    width: "44px"
-    height: "44px"
-  input:
-    backgroundColor: "#15131f"
-    textColor: "{colors.text}"
-    rounded: "{rounded.field}"
-    padding: "13px 14px"
-  table-card:
-    backgroundColor: "{colors.card}"
-    textColor: "#392c3a"
-    rounded: "{rounded.action}"
-    padding: "12px"
-    width: "125px"
-    height: "169px"
-  vote:
-    textColor: "{colors.muted}"
-    rounded: "{rounded.vote}"
-    padding: "8px 12px"
+  card: "12px"
+  control: "14px"
+  panel: "22px"
+  chip: "999px"
 ---
 
 # Design System: The Minds
 
-## Overview
+## Direction
 
-**Creative North Star: "The midnight tabletop"**
+**"A quiet table at night."** The Mind is about a shared sense of timing across the range 1 to 100, so the deck itself is the brand: every card face is tinted by its value, cool teal at 1 through a neutral middle to warm ember at 100 (`color-mix(in oklab, card-cool, card-warm)`). The table glow takes the heat of the top card, so the room visibly warms as play climbs. This is information the table already shows, never a timing hint.
 
-The implemented game uses a dark purple table, warm gold controls, pale numbered cards, and individual player tokens. The centered title menu introduces the same eye emblem and card shapes used in play. This name describes the built direction; it is not a new brand claim.
+Dark only. The product brief asks for a dark, mysterious table; there is no light theme.
 
-The interface keeps the current card, the private hand, and the next game action prominent. Copy explains game actions in Indonesian and English without generic slogans. Room administration sits in a native disclosure below the game.
+## Color
 
-**Key Characteristics:**
-
-- Purple tabletop with gold actions and pale cards.
-- Grenze titles and card numbers with system sans-serif controls.
-- Visible player identity and status; concealed opponents' hands.
-- Short action feedback without timing assistance.
-
-Recorded from `src/styles.css`, `src/main.tsx`, and `src/ui.tsx`, with product constraints from `PRODUCT.md`. Values describe the current implementation. Browser screenshots, computed styles, and visual accessibility checks were unavailable; this document does not certify rendered appearance.
-
-## Colors
-
-Gold is the primary action color; violet-black surfaces establish the game setting. Frontmatter preserves the ten root color variables by their existing names. Component-specific literals remain component details.
-
-- **Primary:** `gold` for main actions, title, invitations, and shuriken; `gold-dark` for text on primary buttons.
-- **Status:** `mint` for readiness, online state, approval, and keyboard focus; `rose` for life icons. Status also has text or icons.
-- **Neutral:** `ink` is the page ground; `panel` supports native select options; `line` borders controls. `text` and `muted` distinguish primary and supporting copy. `card` is the played-card face.
-
-Player tokens have local seat colors: `#c0acd9`, `#a4d6c3`, `#e4ca91`, and `#e4aebd`. These identify seats, not game rank. The table uses `radial-gradient(ellipse at 50% 20%,#39314f,#242235 76%)`.
+- **Ember** is the only accent: primary buttons, the viewer's own seat, the playable card ring, level progress, shuriken.
+- **Cool** marks positive state (ready, approved, connected). **Danger** marks lives, mistakes, and disconnects.
+- Neutrals are cool off-blacks (`bg`, `surface`) with `text`/`muted` for copy. No purple, no gold.
 
 ## Typography
 
-Grenze is self-hosted at `/fonts/grenze.ttf`, with a variable weight range of 100–900 and `font-display: swap`; its license is `public/fonts/OFL.txt`. The implementation uses weight 500 for display headings and card numbers. Georgia and serif are fallbacks. Controls and supporting text use Segoe UI, system-ui, sans-serif.
+Bricolage Grotesque (self-hosted via `@fontsource-variable`) is used condensed (`font-stretch: 75%`) for card numbers, the title, and headings; Geist for UI text. Numbers use tabular figures.
 
-The title uses the frontmatter display role; table messages use the headline role. Eyebrow labels use the label role. Supporting text varies from 12–15px by component, and inputs use 16px. There is no imposed mathematical type scale. Played numbers are 74px with a .9 line height; private hand numbers are 42px with a line height of 1.
+## Shape and depth
+
+Cards 12px, buttons and fields 14px, panels and sheets 22px, status chips are pills. Buttons are tactile: an inset bottom edge that collapses on press. Cards have an inner print frame and a soft drop shadow.
 
 ## Layout
 
-The shell is centered at a maximum 1320px with 40px side padding. The title area caps at 1000px and its menu at 400px. The room caps at 960px and splits into two zones: the **table** shows shared state (seats, HUD, center pile, phase message, missed cards, vote status) and the **tray** holds what belongs to the viewer (private hand and their next action). The tray is sticky at the bottom so the hand and the Ready/vote buttons stay in reach. Room management follows in a native `details` element; its roster uses two columns.
+- **Home**: title, one-line rule, and the create/join form on the left; a fan of five cards spanning the deck on the right. On phones the fan sits above the title.
+- **Room**: a bar (masked code, copy link, connection, players button) above the **stage** and the **dock**.
+  - Stage = shared state: HUD (level track, lives, shuriken), seats, center pile with who played it, phase message, missed cards, vote chips, lobby CTA.
+  - Dock = the viewer's own things, sticky at the bottom: the hand held as a fan and the next action.
+  - Players and settings live in a drawer (bottom sheet on phones).
+- One primary action per phase: copy invite, deal, ready, vote, resume, or back to lobby.
 
-Seats: the lobby shows four seats, empty ones act as invite buttons. After dealing only real players are shown. The HUD shows level with a progress rail, lives as hearts, and shuriken as stars. Each state has one primary action: copy invite (fewer than two players), deal (host), ready, vote, resume (host), or back to lobby (host).
+## Hand
 
-The hand never wraps: from the third card on, cards overlap only as much as the row needs (`--n` card count, `--w` card width), keeping each corner index visible. Above five cards, covered cards hide their center number.
+Cards fan with a small rotation and arc. From the third card on they overlap only as much as the row needs, keeping corner indices readable; covered cards hide their center number (from 10 cards on desktop, 6 on phones, where the fan also flattens). The lowest card is separated, lifted, and ringed in ember when playable.
 
-At `max-width: 760px`, shell padding becomes 16px, decorative menu cards disappear, the roster becomes one column, the tray spans edge to edge, the connection label becomes a dot, and hand cards are 52px wide. Dialog actions stack in reverse column order.
+## Motion
 
-## Elevation & Depth
+Each animation states a change: a new hand deals in with a stagger; the played card flies in from the dock (yours) or from above (others) and the player's seat pings; lives and shuriken pop when they change; sheets rise and the drawer slides. The stage glow eases between heats. `prefers-reduced-motion` reduces all of it to instant. Nothing loops, and nothing signals when to play.
 
-Tonal layering, a felt table with an inset rim, and small object shadows establish depth.
+## Icons
 
-- Primary action: `0 4px 14px #08061155`.
-- Table and menu: `0 24px 60px #05030b80`.
-- Played card: `0 10px 22px #09061270`.
-- Tray: `0 -16px 36px #05030b99`.
-
-The played card lands over 280ms; a new hand deals in with a 45ms stagger; lives and shuriken pulse once when they change. Reduced-motion preference removes these. No looping animation signals when to play.
-
-## Shapes
-
-One scale: cards 10px, controls and chips 12px, surfaces (menu, table, tray, dialogs) 20px. Seat tokens are 52x58px with 14px corners; the viewer's own token has a double ring. Dashed outlines identify empty seats and offline players.
-
-## Components
-
-Result notifications use a native dialog with the completed/failed level, actual reward, and remaining inventory. Dismissal is personal and never sets readiness. The result enters once over 240ms; the lives display reacts over 220ms. Reduced motion disables both. Lobby uses “Bagikan kartu”; after dealing, “Aku siap” changes to “Batal siap” until activation.
-
-The table stats include a compact level progress rail. Completed levels use gold, the current level uses mint, and upcoming levels stay muted. Result dialogs distinguish level completion, card mistakes, wins, and losses; card mistakes list the missed cards and the lost life.
-
-### Buttons
-
-Primary and secondary actions have a minimum height of 50px, 13px 24px padding, 12px corners, and 15px semibold labels. Primary hover is `#efdab0`; secondary hover is `#3a2e48`. Pressing either applies `brightness(.9)`. Disabled buttons normally use .48 opacity. A disabled ready button retains full opacity, mint text, and a `#719b89` border. Text actions are transparent, at least 44px high, and turn gold on hover; icon controls are 44px squares.
-
-### Cards and player tokens
-
-The played card is a noninteractive pale face with the number repeated in opposite corners. Its empty state uses a purple back and eye emblem. Private cards are buttons: only the lowest card is available during active play. That card uses `#f3dfb8`, a gold outline, and an 8px lift (14px on hover). Keyboard focus changes its outline to mint. Other hand cards stay fully opaque while disabled. Opponents expose counts and decorative card backs only.
-
-### Inputs
-
-Fields have visible labels, 50px minimum height, 10px corners, and a `#776886` border. Focus changes the border to gold; keyboard focus also receives the shared 2px mint outline with a 4px offset. Nicknames include a visible description. Native selects retain their platform behavior. Errors appear in a separate alert with explanatory copy.
-
-### Navigation
-
-The header combines the home brand link with game rules, a sound toggle, and a language select. It has no active-route decoration. Menu create/join controls use a selected fill of `#49374d` and text `#f4e3bf`; unselected hover uses `#282033`. Preserve the existing pressed-state semantics. Room management uses the native disclosure marker and turns gold on hover.
-
-### Shuriken voting and dialogs
-
-Vote labels wrap, use 8px corners and a `#71617d` border, and show approval with mint text, a `#719b89` border, and a check icon. Approval and decline remain separate actions. Native confirmation dialogs focus the cancel action first and restore previous focus when closed; stale confirmation is disabled when the table changes. Dialogs use a `#241c31` surface and `#090710d9` backdrop.
-
-## Do's and Don'ts
-
-- Do keep the private hand and next available action easy to find.
-- Do use text or icons alongside connection, readiness, and vote colors.
-- Do retain keyboard focus, native disclosures and dialogs, and reduced-motion handling.
-- Do keep Indonesian and English copy specific to the game action.
-- Don't expose another player's private card values.
-- Don't introduce animation that supplies timing assistance.
-- Don't replace game copy with generic promotional slogans.
-- Don't claim browser verification from source inspection alone.
+Phosphor (`@phosphor-icons/react`), bold weight by default; filled for hearts and shuriken.

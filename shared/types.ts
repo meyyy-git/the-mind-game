@@ -6,7 +6,7 @@ export type Member = { id: string; name: string; secret: string; role: 'player' 
 export type Room = {
   code: string; host: string; members: Member[]; settings: Settings; phase: Phase; reason: Reason;
   epoch: number; revision: number; gameId: string; level: number; target: number; lives: number; stars: number;
-  top: number | null; votes: string[]; revealed: number[]; expiresAt: number | null; lastSeen: number;
+  top: number | null; topBy: string | null; votes: string[]; revealed: number[]; expiresAt: number | null; lastSeen: number;
   receipts: string[]; event: { id: string; kind: string };
   result: GameResult | null; mistakes: number; shurikensUsed: number;
 };
