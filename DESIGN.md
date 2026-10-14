@@ -59,6 +59,7 @@ Cards 12px, buttons and fields 14px, panels and sheets 22px, status chips are pi
   - Stage = shared state: HUD (level track, lives, shuriken), seats, center pile with who played it, phase message, missed cards, vote chips, lobby CTA.
   - Dock = the viewer's own things, sticky at the bottom: the hand held as a fan and the next action.
   - Players and settings live in a drawer (bottom sheet on phones).
+- Desktop fits the whole room in one screen (checked at 1280x720 up to 1920x1080): the HUD splits around the seats in one row, the dock places the hand in the middle and the actions on the right, and card sizes follow the viewport height (`dvh`). Phones keep the stacked layout with a sticky dock.
 - One primary action per phase: copy invite, deal, ready, vote, resume, or back to lobby.
 
 ## Hand
@@ -68,6 +69,10 @@ Cards fan with a small rotation and arc. From the third card on they overlap onl
 ## Motion
 
 Each animation states a change: a new hand deals in with a stagger; the played card flies in from the dock (yours) or from above (others) and the player's seat pings; lives and shuriken pop when they change; sheets rise and the drawer slides. The stage glow eases between heats. `prefers-reduced-motion` reduces all of it to instant. Nothing loops, and nothing signals when to play.
+
+## Logo
+
+Two card outlines, tilted like a small fan: the back card in cool teal (hidden), the front card in ember (played), filled with the surface color so it covers the back one. Used in the wordmark, on card backs, the farewell screen, and the favicon (`public/icon.svg`). Component: `Mark` in `src/ui.tsx`; set `--mark-bg` to the surface behind it.
 
 ## Icons
 

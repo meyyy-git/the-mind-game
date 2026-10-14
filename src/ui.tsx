@@ -10,14 +10,22 @@ export function Icon({ name, className = '', weight = 'bold' }: { name: keyof ty
 
 /** A face-up card. Its tint runs from cool (1) to warm (100), so the number's place in the deck reads at a glance. */
 export function Card({ value, className = '', style, children }: { value: number | null; className?: string; style?: CSSProperties; children?: ReactNode }) {
-  if (value === null) return <span className={`card card-back ${className}`} style={style} aria-hidden="true"><span className="card-back-mark"/></span>;
+  if (value === null) return <span className={`card card-back ${className}`} style={style} aria-hidden="true"><Mark/></span>;
   return <span className={`card ${className}`} style={{ '--heat': (value - 1) / 99, ...style } as CSSProperties} aria-hidden="true">
     <span className="card-index">{value}</span><strong>{value}</strong><span className="card-index card-index-end">{value}</span>{children}
   </span>;
 }
 
+/** Logo: two card outlines, the hidden one cool and the played one warm. The front card is filled with --mark-bg so it covers the back one. */
+export function Mark({ className = '' }: { className?: string }) {
+  return <svg className={'mark ' + className} viewBox="8 8 48 49" fill="none" strokeWidth="3.5" aria-hidden="true">
+    <rect x="14" y="16" width="26" height="36" rx="5" stroke="var(--card-cool)" transform="rotate(-14 27 34)"/>
+    <rect x="25" y="15" width="26" height="36" rx="5" stroke="var(--ember)" fill="var(--mark-bg, var(--bg))" transform="rotate(9 38 33)"/>
+  </svg>;
+}
+
 export function Wordmark() {
-  return <span className="wordmark"><span className="wordmark-mark" aria-hidden="true"><i/><i/></span>the minds</span>;
+  return <span className="wordmark"><Mark/>the minds</span>;
 }
 
 export function maskInviteCode(code: string) {

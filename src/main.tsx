@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createRootRoute, createRoute, createRouter, Link, Outlet, RouterProvider, useNavigate } from '@tanstack/react-router';
 import { io, type Socket } from 'socket.io-client';
 import type { Action, GameResult, Reply, RoomView } from '../shared/types';
-import { Card, ConfirmDialog, Icon, InviteCode, interruptsGame, maskInviteCode, ResultDialog, useModal, Wordmark } from './ui';
+import { Card, ConfirmDialog, Icon, InviteCode, interruptsGame, Mark, maskInviteCode, ResultDialog, useModal, Wordmark } from './ui';
 import '@fontsource-variable/bricolage-grotesque/standard.css';
 import '@fontsource-variable/geist';
 import './styles.css';
@@ -215,7 +215,7 @@ function RoomPage() {
   }
   const [confirmation, setConfirmation] = useState<{ type: 'leave' | 'cancel' | 'kick' | 'resume'; target?: string; epoch: number } | null>(null);
   useEffect(() => { if (autoJoin && connected && room?.code !== code && !attempted.current && !fatal) { attempted.current = true; void enter(code); } }, [autoJoin, connected, code, room, fatal]);
-  if (fatal) return <main className="empty-state"><span className="wordmark-mark big" aria-hidden="true"><i/><i/></span><h1>{t('Sampai bertemu lagi.', 'Until next time.')}</h1><a className="primary" href="/">{t('Kembali ke awal', 'Back to home')}</a></main>;
+  if (fatal) return <main className="empty-state"><Mark className="mark-big"/><h1>{t('Sampai bertemu lagi.', 'Until next time.')}</h1><a className="primary" href="/">{t('Kembali ke awal', 'Back to home')}</a></main>;
   if (!room || room.code !== code) return <main className="join-page"><Fan values={[14, 50, 86]} className="join-fan"/><section className="menu"><h1>{t('Gabung permainan', 'Join game')}</h1><p className="join-code">{t('Kamu diundang ke room', 'You are invited to room')} <strong>{maskInviteCode(code)}</strong></p><form onSubmit={e => { e.preventDefault(); attempted.current = true; void enter(code); }}><NameField/><button className="primary full" disabled={!connected || busy || !name.trim()}>{busy ? t('Menghubungkan…', 'Connecting…') : t('Gabung room', 'Join room')}<Icon name="arrow"/></button></form>{error && <p className="form-error" role="alert">{messages[error] ? t(...messages[error]) : t('Room tidak dapat dibuka. Coba lagi.', 'This room could not be opened. Try again.')}</p>}</section></main>;
   const self = room.members.find(m => m.id === room.self)!;
   const host = room.host === self.id, playing = self.role === 'player', isLobby = room.phase === 'lobby';
@@ -262,13 +262,11 @@ function RoomPage() {
     </div>
 
     <section className="stage" style={{ '--heat': heat } as React.CSSProperties} aria-label={t('Meja permainan', 'Game table')}>
-      {!isLobby && <dl className="hud">
+      <div className="stage-top">
+      {!isLobby && <dl className="hud hud-start">
         <div className="hud-level"><dt>Level</dt><dd><strong>{room.level}</strong><span>/{room.target}</span>
           <span className="level-track" role="progressbar" aria-valuemin={0} aria-valuemax={room.target} aria-valuenow={room.level} aria-label={t(`Level ${room.level} dari ${room.target}`, `Level ${room.level} of ${room.target}`)}>{Array.from({ length: room.target }, (_, index) => <i key={index} className={index + 1 < room.level ? 'done' : index + 1 === room.level ? 'current' : ''}/>)}</span></dd></div>
-        <div className="hud-lives"><dt>{t('Nyawa', 'Lives')}</dt><dd key={room.lives} aria-label={`${room.lives} ${t('nyawa', 'lives')}`}>{room.lives ? Array.from({ length: room.lives }, (_, i) => <Icon name="heart" weight="fill" key={i}/>) : '0'}</dd></div>
-        <div className="hud-stars"><dt>Shuriken</dt><dd key={room.stars} aria-label={`${room.stars} shuriken`}>{room.stars ? Array.from({ length: room.stars }, (_, i) => <Icon name="star" weight="fill" key={i}/>) : '0'}</dd></div>
       </dl>}
-
       <ol className="seats" aria-label={t('Pemain di meja', 'Players at the table')}>
         {seats.map((m, i) => m ? <li key={m.id} className={'seat' + (m.id === self.id ? ' is-self' : '') + (m.ready ? ' is-ready' : '') + (!m.online ? ' is-offline' : '')}>
           <span className="seat-token" aria-hidden="true">{m.name.slice(0, 1).toUpperCase()}{m.ready && <Icon name="check"/>}{justPlayed && room.topBy === m.id && <span className="seat-ping" key={room.top!}/>}</span>
@@ -277,7 +275,13 @@ function RoomPage() {
           {!isLobby && m.count > 0 && <span className="seat-hand" aria-hidden="true">{Array.from({ length: Math.min(m.count, 5) }, (_, n) => <i key={n}/>)}</span>}
         </li> : <li key={i}><button className="seat seat-empty" onClick={copy} aria-label={t('Kursi kosong. Salin tautan undangan', 'Empty seat. Copy invite link')}><span className="seat-token"><Icon name="plus"/></span><strong className="seat-name">{t('Kursi kosong', 'Empty seat')}</strong><span className="seat-status">{t('Undang', 'Invite')}</span></button></li>)}
       </ol>
+      {!isLobby && <dl className="hud hud-end">
+        <div className="hud-lives"><dt>{t('Nyawa', 'Lives')}</dt><dd key={room.lives} aria-label={`${room.lives} ${t('nyawa', 'lives')}`}>{room.lives ? Array.from({ length: room.lives }, (_, i) => <Icon name="heart" weight="fill" key={i}/>) : '0'}</dd></div>
+        <div className="hud-stars"><dt>Shuriken</dt><dd key={room.stars} aria-label={`${room.stars} shuriken`}>{room.stars ? Array.from({ length: room.stars }, (_, i) => <Icon name="star" weight="fill" key={i}/>) : '0'}</dd></div>
+      </dl>}
+      </div>
 
+      <div className="stage-center">
       <div className="pile">
         {isLobby ? <Fan values={[17, 34, 68]} className="lobby-fan"/> : <>
           <p className="sr-only" role="status" aria-atomic="true">{room.top === null ? t('Belum ada kartu dimainkan.', 'No card played yet.') : t('Kartu teratas: ', 'Top card: ') + room.top + (playedBy ? t(', dari ', ', from ') + playedBy.name : '')}</p>
@@ -295,6 +299,7 @@ function RoomPage() {
         {actionError}
       </div>}
       {!isLobby && offline && <p className="offline-note">{offline} {t('sedang offline. Kartunya tetap dihitung.', 'is offline. Their cards still count.')}{room.phase === 'active' && room.reconnectAt && ' ' + t('Permainan dijeda jika batas kembali terlewati.', 'Play pauses when the reconnect window ends.')}</p>}
+      </div>
     </section>
 
     {!isLobby && <section className="dock" aria-label={playing ? t('Kartumu', 'Your hand') : t('Kamu menonton', 'You are watching')}>
