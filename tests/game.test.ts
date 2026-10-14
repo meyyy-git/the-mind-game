@@ -49,7 +49,7 @@ describe('original rules and online state', () => {
     const packet=send(r,a.id,{type:'play',card:20}); expect(r.reason).toBe('mistake');
     expect(r.result).toMatchObject({kind:'mistake',lives:1,missedCards:[10]});
     const result=structuredClone(r.result); act(r,a.id,packet); expect(r.result).toEqual(result); expect(r.lives).toBe(1);
-    ready(r); ready(r); r.level=2; r.stars=3; a.hand=[30]; b.hand=[40];
+    ready(r); r.level=2; r.stars=3; a.hand=[30]; b.hand=[40];
     send(r,a.id,{type:'play',card:30}); send(r,b.id,{type:'play',card:40});
     expect(r.result?.reward.stars).toBe(0); expect(r.result?.stars).toBe(3);
     expect(r.result?.shurikensUsed).toBe(0);
@@ -58,11 +58,10 @@ describe('original rules and online state', () => {
     const r = table(); const [a, b] = players(r);
     r.level = 3; a.hand = [20, 90, 95]; b.hand = [10, 80, 99];
     send(r, a.id, { type: 'play', card: 20 });
-    expect(r.level).toBe(3); expect(r.lives).toBe(1); expect(r.reason).toBe('mistake');
-    ready(r);
-    expect(r.level).toBe(3); expect(r.phase).toBe('ready');
-    expect(a.hand).toHaveLength(3); expect(b.hand).toHaveLength(3);
-    ready(r); expect(r.phase).toBe('active');
+    expect(r.level).toBe(3); expect(r.lives).toBe(1); expect(r.reason).toBe('mistake'); expect(r.phase).toBe('ready');
+    // The new hand is dealt immediately, so one Ready press starts the retry.
+    expect(a.hand).toHaveLength(3); expect(b.hand).toHaveLength(3); expect(r.top).toBeNull();
+    ready(r); expect(r.phase).toBe('active'); expect(r.level).toBe(3);
   });
   for (const [n, target] of [[2, 12], [3, 10], [4, 8]]) test(`${n} players can complete all ${target} levels and rematch`, () => {
     const r = table(n); expect(r.lives).toBe(n); expect(r.stars).toBe(1); expect(r.target).toBe(target);
@@ -82,11 +81,10 @@ describe('original rules and online state', () => {
   test('one mistake discards every lower hand card including offline players, costs one life', () => {
     const r = table(3); const [a, b, c] = players(r); a.hand = [34, 80]; b.hand = [26, 30, 90]; c.hand = [12, 35]; c.online = false;
     send(r, a.id, { type: 'play', card: 34 });
-    expect(r.lives).toBe(2); expect(r.top).toBe(34); expect(r.revealed.sort((a,b)=>a-b)).toEqual([12,26,30]);
+    expect(r.lives).toBe(2); expect(r.revealed).toEqual([12,26,30]);
     expect(view(r,b.id).result).toMatchObject({kind:'mistake',missedCards:[12,26,30],lives:2});
-    expect(b.hand).toEqual([90]); expect(c.hand).toEqual([35]); expect(r.phase).toBe('ready');
-    ready(r); expect(r.phase).toBe('ready'); expect(r.revealed).toEqual([]); expect(b.hand).toHaveLength(1);
-    ready(r); expect(r.phase).toBe('active');
+    expect(b.hand).toHaveLength(1); expect(c.hand).toHaveLength(1); expect(r.phase).toBe('ready');
+    ready(r); expect(r.phase).toBe('active'); expect(r.revealed).toEqual([]);
   });
   test('last life lost takes priority over clearing the final hand', () => {
     const r = table(); const [a, b] = players(r); a.hand = [50]; b.hand = [10]; r.lives = 1;
@@ -96,9 +94,14 @@ describe('original rules and online state', () => {
   test('mistake and shuriken reveal remain visible while the same level continues', () => {
     const r = table(); const [a,b] = players(r); a.hand=[20]; b.hand=[10];
     send(r,a.id,{type:'play',card:20}); expect(r.phase).toBe('ready'); expect(r.level).toBe(1);
-    ready(r); expect(r.level).toBe(1); expect(r.phase).toBe('ready'); expect(a.hand.length).toBe(1);
-    ready(r); a.hand=[20]; b.hand=[30]; send(r,a.id,{type:'propose'}); send(r,b.id,{type:'vote',yes:true});
-    expect(r.stars).toBe(0); expect(a.hand.length).toBe(0); expect(r.revealed.length).toBe(2); expect(r.level).toBe(1);
+    expect(r.revealed).toEqual([10]); expect(a.hand.length).toBe(1);
+    ready(r); expect(r.phase).toBe('active'); a.hand=[20,50]; b.hand=[30,60]; send(r,a.id,{type:'propose'}); send(r,b.id,{type:'vote',yes:true});
+    expect(r.stars).toBe(0); expect(a.hand).toEqual([50]); expect(r.revealed).toEqual([20,30]); expect(r.level).toBe(1);
+  });
+  test('a shuriken that empties every hand completes the level without another Ready round', () => {
+    const r = table(); const [a,b] = players(r); r.level = 2; a.hand=[20]; b.hand=[30];
+    send(r,a.id,{type:'propose'}); send(r,b.id,{type:'vote',yes:true});
+    expect(r.result).toMatchObject({kind:'level',level:2,shurikensUsed:1}); expect(r.level).toBe(3); expect(a.hand).toHaveLength(3);
   });
   test('vote rejects without spending, waits for offline approval, cannot be bypassed by host', () => {
     const r = table(); const [a,b] = players(r);

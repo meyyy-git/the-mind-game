@@ -118,11 +118,7 @@ export function act(r: Room, memberId: string, a: Action, now = Date.now()) {
       isHost(); requireThat(r.phase === 'lobby', 'phase'); r.settings = validateSettings(a.settings); transition(r, 'lobby'); break;
     case 'ready':
       isPlayer(); requireThat(r.phase === 'ready', 'phase'); m.ready = true;
-      if (r.phase === 'ready' && players(r).filter(m => m.online).every(m => m.ready)) {
-        const retrySameLevel = r.reason === 'mistake' && r.lives > 0;
-        if (retrySameLevel) deal(r);
-        else { transition(r, 'active'); r.revealed = []; event(r, 'active'); }
-      }
+      if (players(r).filter(m => m.online).every(m => m.ready)) { transition(r, 'active'); r.revealed = []; event(r, 'active'); }
       break;
     case 'unready':
       isPlayer(); requireThat(r.phase === 'ready', 'phase'); m.ready = false; break;
@@ -138,15 +134,13 @@ export function act(r: Room, memberId: string, a: Action, now = Date.now()) {
       for (const p of players(r)) {
         r.revealed.push(...p.hand.filter(c => c < card)); p.hand = p.hand.filter(c => c > card);
       }
-      if (r.revealed.length) {
-        r.lives--;
-        r.mistakes++;
-        r.result = { id: randomUUID(), kind: 'mistake', level: r.level, lives: r.lives, stars: r.stars, reward: { lives: 0, stars: 0 }, mistakes: r.mistakes, shurikensUsed: r.shurikensUsed, missedCards: [...r.revealed].sort((a,b)=>a-b) };
-        transition(r, 'ready', 'mistake'); event(r, 'mistake');
-      }
-      else event(r, 'card');
-      // Keep a mistake visible until the team acknowledges it, even when it emptied all hands.
-      if (!r.revealed.length || r.lives <= 0) finishLevel(r);
+      if (!r.revealed.length) { event(r, 'card'); finishLevel(r); break; }
+      r.lives--; r.mistakes++;
+      const missed = [...r.revealed].sort((a, b) => a - b);
+      r.result = { id: randomUUID(), kind: 'mistake', level: r.level, lives: r.lives, stars: r.stars, reward: { lives: 0, stars: 0 }, mistakes: r.mistakes, shurikensUsed: r.shurikensUsed, missedCards: missed };
+      if (r.lives <= 0) { finishLevel(r); break; }
+      // Redeal now, so the one Ready press happens while looking at the new hand.
+      deal(r); r.reason = 'mistake'; r.revealed = missed; event(r, 'mistake');
       break;
     }
     case 'propose':
@@ -160,6 +154,8 @@ export function act(r: Room, memberId: string, a: Action, now = Date.now()) {
         if (players(r).every(p => p.online && r.votes.includes(p.id))) {
           r.stars--; r.shurikensUsed++; r.revealed = players(r).flatMap(p => p.hand.length ? [p.hand.shift()!] : []); r.votes = [];
           transition(r, 'ready', 'shuriken'); event(r, 'shuriken');
+          // Nothing left to play: skip a pointless Ready round and complete the level now.
+          if (!players(r).some(p => p.hand.length)) finishLevel(r);
         }
       }
       break;
