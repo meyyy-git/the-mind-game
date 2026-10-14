@@ -345,7 +345,7 @@ input { caret-color: var(--ember); }
   .card-pile { --cw: clamp(84px, 14dvh, 148px); }
   .lobby-fan { --cw: clamp(68px, 11dvh, 96px); padding: 8px 0 4px; }
   .message h2 { font-size: clamp(24px, 4dvh, 38px); }
-  .missed { flex-direction: row; gap: 10px; }
+  .stage .missed { flex-direction: row; gap: 10px; }
   .dock { position: static; margin-top: 12px; display: grid; grid-template-columns: 190px minmax(0, 1fr) 190px; align-items: center; gap: 0 16px; padding: 6px 20px 14px; }
   .dock>.action-alert { grid-column: 1 / -1; margin-top: 10px; }
   .dock>.hand,.dock>.dock-note { grid-column: 2; }
